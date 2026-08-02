@@ -40,14 +40,20 @@ const METHODS: {
   fields: { key: string; label: string; placeholder: string }[];
 }[] = [
   {
-    id: "direct_db",
-    label: "Direct database connection",
-    note: "Read-only replica of your PM database. Fastest sync, richest data.",
+    id: "vendor_api",
+    label: "PM/EHR vendor API",
+    note: "Your vendor's partner API (e.g. athenahealth, Tebra). We connect as a registered app.",
     fields: [
-      { key: "host", label: "Database host", placeholder: "db.practice.example" },
-      { key: "port", label: "Port", placeholder: "5432" },
-      { key: "database", label: "Database name", placeholder: "practice_pm" },
-      { key: "username", label: "Read-only user", placeholder: "remitpath_ro" },
+      {
+        key: "vendor_app_id",
+        label: "Vendor app / client ID",
+        placeholder: "remitpath-partner-app",
+      },
+      {
+        key: "api_scope_note",
+        label: "API scope note",
+        placeholder: "encounters + billing read scopes",
+      },
     ],
   },
   {
@@ -387,16 +393,30 @@ export function SignupWizard() {
           )}
 
           {step === 3 && (
-            <RadioCards
-              options={PLANS.map((p) => ({
-                id: p.id,
-                title: p.label,
-                note: p.note,
-                right: p.price,
-              }))}
-              value={form.plan}
-              onChange={(id) => set({ plan: id as PlanType })}
-            />
+            <div className="space-y-5">
+              <RadioCards
+                options={PLANS.map((p) => ({
+                  id: p.id,
+                  title: p.label,
+                  note: p.note,
+                  right: p.price,
+                }))}
+                value={form.plan}
+                onChange={(id) => set({ plan: id as PlanType })}
+              />
+              <div className="border-l-2 border-severity-info bg-gray-50 p-3">
+                <div className="text-xs font-medium text-gray-700">
+                  What happens after signup
+                </div>
+                <p className="mt-1 text-xs leading-5 text-gray-600">
+                  Production onboarding also includes payer EDI enrollment —
+                  enrolling your NPIs with each payer for claims, ERA, and
+                  eligibility transactions. This typically takes 2-6 weeks per
+                  payer; we manage the paperwork and follow-up for you. Nothing
+                  is needed from you at this step.
+                </p>
+              </div>
+            </div>
           )}
 
           {step === 4 && (

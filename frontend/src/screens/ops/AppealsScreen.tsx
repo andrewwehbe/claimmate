@@ -1,13 +1,22 @@
 import { useMemo, useState } from "react";
-import { Gavel } from "lucide-react";
+import { ArrowUpRight, Gavel } from "lucide-react";
 
-import { useAppealCases } from "../../api/queries";
+import { useAppealCases, useEscalateAppeal } from "../../api/queries";
+import { AuditTrail } from "../../components/AuditTrail";
 import { CodeChip } from "../../components/CodeChip";
 import { DataTable, type Column } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { SidePanel } from "../../components/SidePanel";
 import { StatusBadge } from "../../components/StatusBadge";
 import { TopBar } from "../../components/TopBar";
+import {
+  APPEAL_LEVEL_LABELS,
+  APPEAL_LEVEL_LONG,
+  deadlineDays,
+  isPayerOverride,
+  NEXT_LEVEL,
+  SUBMISSION_CHANNEL_LABELS,
+} from "../../lib/appealRules";
 import {
   APPEAL_STATUS_LABELS,
   APPEAL_STATUS_TONE,
@@ -69,6 +78,17 @@ export function AppealsScreen() {
       header: "CARC",
       render: (a) => (
         <CodeChip code={`CO-${a.carc_code}`} title={carcDescription(a.carc_code)} />
+      ),
+    },
+    {
+      key: "level",
+      header: "Level",
+      sortValue: (a) => a.level,
+      render: (a) => (
+        <StatusBadge
+          label={APPEAL_LEVEL_LABELS[a.level]}
+          title={APPEAL_LEVEL_LONG[a.level]}
+        />
       ),
     },
     {
@@ -198,7 +218,9 @@ export function AppealsScreen() {
         }
         width={640}
       >
-        {selected && <AppealDetail appeal={selected} />}
+        {selected && (
+          <AppealDetail appeal={selected} onSelectAppeal={setSelectedId} />
+        )}
       </SidePanel>
     </div>
   );
@@ -265,13 +287,29 @@ function Kpi({
 
 // ---------------------------------------------------------------- detail
 
-function AppealDetail({ appeal }: { appeal: AppealCase }) {
+function AppealDetail({
+  appeal,
+  onSelectAppeal,
+}: {
+  appeal: AppealCase;
+  onSelectAppeal: (id: string) => void;
+}) {
+  const escalate = useEscalateAppeal();
+  const nextLevel = NEXT_LEVEL[appeal.level];
+  const canEscalate =
+    appeal.status === "upheld" && nextLevel !== null && !appeal.successor_id;
+  const windowDays = deadlineDays(appeal.level, appeal.payer_name);
+
   return (
     <div className="space-y-5 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge
           label={APPEAL_STATUS_LABELS[appeal.status]}
           tone={APPEAL_STATUS_TONE[appeal.status]}
+        />
+        <StatusBadge
+          label={APPEAL_LEVEL_LABELS[appeal.level]}
+          title={APPEAL_LEVEL_LONG[appeal.level]}
         />
         <CodeChip
           code={`CO-${appeal.carc_code}`}
@@ -286,6 +324,87 @@ function AppealDetail({ appeal }: { appeal: AppealCase }) {
           </span>
         )}
       </div>
+
+      <div className="space-y-0.5 text-xs text-gray-500">
+        <div>
+          Submission channel:{" "}
+          <span className="text-gray-700">
+            {SUBMISSION_CHANNEL_LABELS[appeal.submission_channel]}
+          </span>
+        </div>
+        <div>
+          Filing window: {windowDays} days ({APPEAL_LEVEL_LONG[appeal.level]},{" "}
+          {isPayerOverride(appeal.level, appeal.payer_name)
+            ? `${appeal.payer_name} override`
+            : "default rule"}
+          ) — deadline{" "}
+          <span className="font-mono text-gray-700">{appeal.appeal_deadline}</span>
+        </div>
+        {appeal.predecessor_id && (
+          <div>
+            Created from upheld{" "}
+            <button
+              type="button"
+              className="font-mono text-primary hover:underline"
+              onClick={() => onSelectAppeal(appeal.predecessor_id!)}
+            >
+              {appeal.predecessor_id}
+            </button>
+          </div>
+        )}
+        {appeal.successor_id && (
+          <div>
+            Escalated to{" "}
+            <button
+              type="button"
+              className="font-mono text-primary hover:underline"
+              onClick={() => onSelectAppeal(appeal.successor_id!)}
+            >
+              {appeal.successor_id}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {appeal.status === "upheld" && (
+        <div className="flex items-center gap-2 border-l-2 border-severity-warning bg-amber-50/60 p-3">
+          {canEscalate ? (
+            <>
+              <span className="flex-1 text-sm text-gray-700">
+                Upheld at {APPEAL_LEVEL_LONG[appeal.level].toLowerCase()}. Next
+                step: {APPEAL_LEVEL_LONG[nextLevel!].toLowerCase()} (
+                {deadlineDays(nextLevel!, appeal.payer_name)}-day window from
+                the uphold date).
+              </span>
+              <button
+                type="button"
+                className="btn-secondary shrink-0"
+                disabled={escalate.isPending}
+                onClick={() =>
+                  escalate.mutate(appeal.appeal_id, {
+                    onSuccess: (successor) =>
+                      onSelectAppeal(successor.appeal_id),
+                  })
+                }
+              >
+                <ArrowUpRight size={14} />
+                {escalate.isPending ? "Escalating…" : "Escalate to next level"}
+              </button>
+            </>
+          ) : (
+            <span className="text-sm text-gray-600">
+              {appeal.successor_id
+                ? `Already escalated to ${appeal.successor_id}.`
+                : "External review is the final level; no further escalation is available."}
+            </span>
+          )}
+          {escalate.isError && (
+            <span className="text-xs text-severity-error">
+              {escalate.error?.message}
+            </span>
+          )}
+        </div>
+      )}
 
       <section>
         <Label>Disputed services</Label>
@@ -382,6 +501,11 @@ function AppealDetail({ appeal }: { appeal: AppealCase }) {
             </div>
           ))}
         </div>
+      </section>
+
+      <section>
+        <Label>Recent activity</Label>
+        <AuditTrail entityId={appeal.appeal_id} />
       </section>
     </div>
   );

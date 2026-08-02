@@ -1,5 +1,6 @@
 """Appeal levels and per-payer deadline rules."""
 
+import json
 from datetime import date
 
 import pytest
@@ -33,6 +34,17 @@ class TestDeadlineRules:
         # Aetna (60054) overrides reconsideration to 180, inherits the rest
         assert rules.window_days("60054", AppealLevel.RECONSIDERATION) == 180
         assert rules.window_days("60054", AppealLevel.LEVEL_1) == 60
+
+    def test_second_payer_overrides(self, rules):
+        assert rules.window_days("87726", AppealLevel.RECONSIDERATION) == 120
+        assert rules.window_days("87726", AppealLevel.LEVEL_1) == 90
+        assert rules.window_days("87726", AppealLevel.LEVEL_2) == 60
+
+    def test_defaults_missing_a_level_fail_at_load(self, tmp_path):
+        bad = {"default": {"reconsideration": 90}, "payers": {}}
+        (tmp_path / "appeal_deadlines.json").write_text(json.dumps(bad), encoding="utf-8")
+        with pytest.raises(ValueError, match="missing levels"):
+            AppealDeadlineRules(tmp_path)
 
     def test_deadline_and_days_remaining(self, rules):
         denial_date = date(2026, 7, 30)

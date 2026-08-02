@@ -11,6 +11,7 @@ import type {
   AppealLetter,
   AppealsResponse,
   AppealView,
+  AuditEvent,
   ClaimDetailView,
   DashboardMetrics,
   DenialRecordView,
@@ -39,6 +40,7 @@ export const queryKeys = {
   practiceClaims: (id: string) => ["practices", id, "claims"] as const,
   appeals: ["appeals"] as const,
   remittances: (payer: string | null) => ["remittances", payer] as const,
+  audit: ["audit"] as const,
 };
 
 // ------------------------------------------------------------- queries
@@ -128,6 +130,21 @@ export function useRemittances(payerName: string | null) {
   });
 }
 
+export function useOpsRemittances() {
+  return useQuery({
+    queryKey: queryKeys.remittances("__ops__"),
+    queryFn: () => api<RemittanceRow[]>("/api/remittances"),
+  });
+}
+
+/** Full append-only audit log, newest first. Filtering happens client-side. */
+export function useAudit() {
+  return useQuery({
+    queryKey: queryKeys.audit,
+    queryFn: () => api<AuditEvent[]>("/api/audit"),
+  });
+}
+
 // ----------------------------------------------------------- mutations
 
 interface ReviewContext {
@@ -168,6 +185,7 @@ export function useReviewClaim(action: "approve" | "reject") {
       void qc.invalidateQueries({ queryKey: queryKeys.queue });
       void qc.invalidateQueries({ queryKey: queryKeys.claim(claimId) });
       void qc.invalidateQueries({ queryKey: queryKeys.dashboard });
+      void qc.invalidateQueries({ queryKey: queryKeys.audit });
     },
   });
 }
@@ -183,6 +201,7 @@ export function useUpdateCodes(claimId: string) {
     onSuccess: (detail) => {
       qc.setQueryData(queryKeys.claim(claimId), detail);
       void qc.invalidateQueries({ queryKey: queryKeys.queue });
+      void qc.invalidateQueries({ queryKey: queryKeys.audit });
     },
   });
 }
@@ -280,6 +299,38 @@ export function useAppealDecision() {
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.appeals });
       void qc.invalidateQueries({ queryKey: ["remittances"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.audit });
+    },
+  });
+}
+
+/** Escalate an upheld appeal to the next level; returns the successor case. */
+export function useEscalateAppeal() {
+  const qc = useQueryClient();
+  return useMutation<AppealCase, Error, string>({
+    mutationFn: (appealId) =>
+      api<AppealCase>(`/api/appeals/${appealId}/escalate`, { method: "POST" }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.appeals });
+      void qc.invalidateQueries({ queryKey: queryKeys.audit });
+    },
+  });
+}
+
+/** One-way payment posting for a remittance row (audit-logged). */
+export function usePostRemittance() {
+  const qc = useQueryClient();
+  return useMutation<RemittanceRow, Error, string>({
+    mutationFn: (remitId) =>
+      api<RemittanceRow>(`/api/remittances/${remitId}/post`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["remittances"] });
+      void qc.invalidateQueries({ queryKey: queryKeys.audit });
+      // posted_to_ledger on practice overviews
+      void qc.invalidateQueries({ queryKey: queryKeys.practices });
+      void qc.invalidateQueries({ queryKey: ["practices"] });
     },
   });
 }

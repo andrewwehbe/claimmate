@@ -15,15 +15,18 @@ import {
   useReviewClaim,
   useUpdateCodes,
 } from "../api/queries";
+import { AuditTrail } from "../components/AuditTrail";
+import { ClaimStepper } from "../components/ClaimStepper";
 import { CodeChip } from "../components/CodeChip";
 import { ConfidenceBar } from "../components/ConfidenceBar";
 import { MaskedName } from "../components/MaskedName";
 import { SeverityDot } from "../components/SeverityDot";
 import { StatusBadge, type BadgeTone } from "../components/StatusBadge";
-import { classNames, formatDate, formatMoney } from "../lib/format";
+import { ageFrom, classNames, formatDate, formatMoney } from "../lib/format";
 import type {
   ClaimDetailView,
   CodedProcedure,
+  EligibilityResult,
   ReviewStatus,
   Severity,
 } from "../types";
@@ -103,6 +106,14 @@ function ClaimDetail({
           </span>
         </div>
       </header>
+
+      {/* Clearinghouse lifecycle stepper */}
+      <div className="flex shrink-0 items-center border-b border-gray-200 bg-white px-6 py-2">
+        <ClaimStepper
+          status={detail.lifecycle_status}
+          rejection={detail.clearinghouse_rejection}
+        />
+      </div>
 
       {/* Three columns */}
       <div className="grid min-h-0 flex-1 grid-cols-[minmax(280px,1fr)_minmax(360px,1.3fr)_minmax(280px,1fr)] divide-x divide-gray-200 overflow-hidden">
@@ -200,6 +211,8 @@ function EncounterColumn({ detail }: { detail: ClaimDetailView }) {
         </div>
       )}
 
+      <EligibilityBlock eligibility={detail.eligibility} />
+
       <SoapSection
         label="Chief Complaint"
         confidence={enc.field_confidence["chief_complaint"]}
@@ -234,6 +247,65 @@ function EncounterColumn({ detail }: { detail: ClaimDetailView }) {
         )}
       </SoapSection>
     </div>
+  );
+}
+
+const ELIGIBILITY_LABELS: Record<EligibilityResult["status"], string> = {
+  active: "Active coverage",
+  inactive: "Coverage inactive",
+  terminated: "Coverage terminated",
+  not_found: "Subscriber not found",
+};
+
+function EligibilityBlock({ eligibility }: { eligibility: EligibilityResult }) {
+  const ok = eligibility.status === "active";
+  return (
+    <section className="mb-3 border border-gray-200 bg-white">
+      <div className="flex h-8 items-center gap-1.5 border-b border-gray-100 px-2.5 text-xs font-medium text-gray-700">
+        Eligibility (270/271)
+        <span className="ml-auto flex items-center gap-1.5">
+          <SeverityDot severity={ok ? "PASS" : "ERROR"} showLabel={false} />
+          <span
+            className={classNames(
+              "text-xs font-medium",
+              ok ? "text-severity-pass" : "text-severity-error",
+            )}
+          >
+            {ELIGIBILITY_LABELS[eligibility.status]}
+          </span>
+        </span>
+      </div>
+      <dl className="space-y-1 px-2.5 py-2 text-xs">
+        <div className="flex justify-between gap-2">
+          <dt className="text-gray-500">Plan</dt>
+          <dd className="text-gray-700">{eligibility.plan_name}</dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-gray-500">Copay</dt>
+          <dd className="font-mono tabular-nums text-gray-700">
+            {formatMoney(eligibility.copay)}
+          </dd>
+        </div>
+        <div className="flex justify-between gap-2">
+          <dt className="text-gray-500">Deductible remaining</dt>
+          <dd className="font-mono tabular-nums text-gray-700">
+            {formatMoney(eligibility.deductible_remaining)}
+          </dd>
+        </div>
+        {eligibility.termination_date && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-gray-500">Terminated</dt>
+            <dd className="font-mono text-severity-error">
+              {formatDate(eligibility.termination_date)}
+            </dd>
+          </div>
+        )}
+        <div className="flex justify-between gap-2">
+          <dt className="text-gray-500">Checked</dt>
+          <dd className="text-gray-400">{ageFrom(eligibility.checked_at)} ago</dd>
+        </div>
+      </dl>
+    </section>
   );
 }
 
@@ -616,6 +688,9 @@ function FindingsColumn({ detail }: { detail: ClaimDetailView }) {
           </li>
         ))}
       </ul>
+
+      <ColumnTitle className="mt-6">Recent activity</ColumnTitle>
+      <AuditTrail entityId={detail.claim.claim_id} />
     </div>
   );
 }

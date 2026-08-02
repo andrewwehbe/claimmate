@@ -10,6 +10,7 @@ are logged; identities are not).
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
@@ -103,6 +104,9 @@ class ClaimsPipeline:
         eligibility = self._eligibility.check(
             EligibilityRequest(
                 member_id=patient.member_id,
+                subscriber_last_name=patient.last_name,
+                subscriber_first_name=patient.first_name,
+                subscriber_dob=patient.date_of_birth,
                 payer_id=patient.payer_id,
                 provider_npi=encounter.provider_npi,
                 service_date=encounter.service_date,
@@ -131,11 +135,14 @@ class ClaimsPipeline:
         coding = self._coder.code(encounter, patient, claim_id)
         if coding.claim is None:
             log.error("coding_failed", reason=coding.failure_reason)
+            finding_reasons = self.hitl.decide(0.0, Decimal("0"), eligibility_findings)
             routing = RoutingDecision(
                 route_to_human=True,
-                reasons=[f"coding failed: {coding.failure_reason}"],
+                reasons=[f"coding failed: {coding.failure_reason}", *finding_reasons.reasons],
             )
-            item = self.hitl.enqueue(claim_id, 0.0, 0, eligibility_findings, routing)
+            item = self.hitl.enqueue(
+                claim_id, 0.0, Decimal("0"), eligibility_findings, routing
+            )
             return ClaimPipelineResult(
                 claim_id=claim_id,
                 encounter=encounter,

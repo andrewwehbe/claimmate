@@ -1,5 +1,5 @@
 {
-  "_comment": "Synthetic eligibility roster for the mock 270/271 provider. Keyed by member ID. Production: replace JsonEligibilityProvider with a clearinghouse-backed provider issuing real-time X12 270 inquiries (e.g. via Availity/Change Healthcare) and parsing 271 responses - same EligibilityProvider interface.",
+  "_comment": "Synthetic eligibility roster for the mock 270/271 provider. Keyed by member ID. Convention: termination_date is the LAST COVERED DAY (a DOS equal to it is still active; first uncovered day is termination_date + 1) - normalize payer rosters that express 'first uncovered day' when loading. Production: replace JsonEligibilityProvider with a clearinghouse-backed provider issuing real-time X12 270 inquiries (e.g. via Availity/Change Healthcare) and parsing 271 responses - same EligibilityProvider interface.",
   "members": {
     "W884512345": {"status": "active", "plan_name": "Aetna Choice POS II", "copay": "25.00", "deductible_remaining": "350.00", "termination_date": null},
     "W771203944": {"status": "active", "plan_name": "Aetna Open Access HMO", "copay": "30.00", "deductible_remaining": "0.00", "termination_date": null},

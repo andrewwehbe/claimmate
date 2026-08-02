@@ -8,11 +8,13 @@
 
 import type {
   AppealLetter,
+  ClaimLifecycleStatus,
   ClaimPayment,
   CodedClaim,
   DashboardMetrics,
   DenialAnalysis,
   DenialRecordView,
+  EligibilityResult,
   PatientDemographics,
   QueueItemView,
   ScrubFinding,
@@ -155,6 +157,29 @@ const PATIENTS = {
     address_line1: "845 Hawthorne Blvd",
     city: "Elgin",
   }),
+  park: patient({
+    first_name: "Evelyn",
+    last_name: "Park",
+    date_of_birth: "1988-02-19",
+    gender: "F",
+    member_id: "AET901145520",
+    group_number: "GRP-88121",
+    payer_name: "Aetna PPO",
+    payer_id: "60054",
+    address_line1: "52 Juniper Ct",
+    city: "Skokie",
+  }),
+  lindqvist: patient({
+    first_name: "Deborah",
+    last_name: "Lindqvist",
+    date_of_birth: "1966-10-03",
+    gender: "F",
+    member_id: "UHC115540098",
+    payer_name: "UnitedHealthcare",
+    payer_id: "87726",
+    address_line1: "310 Alder Ln",
+    city: "Waukegan",
+  }),
 };
 
 const PROVIDERS = {
@@ -248,6 +273,10 @@ function makeClaim(args: {
   reasons: string[];
   enqueuedHoursAgo: number;
   controlNumber: number;
+  /** Overrides for the default active 271 result. */
+  eligibility?: Partial<EligibilityResult>;
+  lifecycle?: ClaimLifecycleStatus;
+  chRejection?: string;
 }): ClaimSeed {
   const claim: CodedClaim = {
     claim_id: args.claimId,
@@ -272,6 +301,15 @@ function makeClaim(args: {
     validation_flags: args.validationFlags ?? [],
     prior_auth_number: args.priorAuth ?? null,
   };
+  const eligibility: EligibilityResult = {
+    status: "active",
+    plan_name: `${args.pat.payer_name} Choice`,
+    copay: money(30),
+    deductible_remaining: money(410),
+    termination_date: null,
+    checked_at: hoursAgo(args.enqueuedHoursAgo + 0.5),
+    ...args.eligibility,
+  };
   const detail: ClaimDetailView = {
     claim,
     findings: args.findings,
@@ -281,6 +319,9 @@ function makeClaim(args: {
     },
     edi_837p: renderEdi837(claim, args.controlNumber),
     review_status: "pending",
+    eligibility,
+    lifecycle_status: args.lifecycle ?? "generated",
+    clearinghouse_rejection: args.chRejection ?? null,
   };
   const queue: QueueItemView | null = args.itemId
     ? {
@@ -894,6 +935,234 @@ export const CLAIM_SEEDS: ClaimSeed[] = [
     reasons: ["Scrub error: DUPLICATE_SUSPECT"],
     enqueuedHoursAgo: 100,
     controlNumber: 121,
+  }),
+  // ---- eligibility failures (held before submission)
+  makeClaim({
+    itemId: "HITL-0010",
+    claimId: "CLM-2026-0119",
+    pat: PATIENTS.park,
+    provider: PROVIDERS.chen,
+    serviceDate: "2026-07-20",
+    chiefComplaint: "Migraine without aura, refractory to OTC therapy",
+    hpi: "38-year-old female with 6 migraine days in the last month despite OTC therapy. Discussed prophylaxis; started propranolol.",
+    dxText: ["Migraine without aura, not intractable"],
+    procText: ["Established patient visit, moderate complexity"],
+    fieldConfidence: {
+      chief_complaint: 0.97,
+      hpi: 0.94,
+      diagnoses: 0.95,
+      procedures: 0.93,
+    },
+    diagnoses: [
+      {
+        code: "G43.009",
+        description:
+          "Migraine without aura, not intractable, without status migrainosus",
+        confidence: 0.94,
+      },
+    ],
+    procedures: [
+      {
+        code: "99214",
+        description: "Office/outpatient visit, established patient, moderate complexity",
+        modifiers: [],
+        units: 1,
+        charge: money(185),
+        diagnosis_pointers: [1],
+        confidence: 0.95,
+      },
+    ],
+    overall: 0.94,
+    findings: [
+      {
+        rule_id: "ELIGIBILITY_INACTIVE",
+        severity: "ERROR",
+        message:
+          "Eligibility: coverage inactive on date of service (terminated 2026-05-31).",
+        procedure_code: null,
+        field: "patient.member_id",
+      },
+    ],
+    reasons: ["Eligibility: coverage inactive on date of service"],
+    enqueuedHoursAgo: 12,
+    controlNumber: 119,
+    eligibility: {
+      status: "terminated",
+      plan_name: "Aetna PPO Choice",
+      copay: money(0),
+      deductible_remaining: money(0),
+      termination_date: "2026-05-31",
+    },
+  }),
+  makeClaim({
+    itemId: "HITL-0011",
+    claimId: "CLM-2026-0117",
+    pat: PATIENTS.lindqvist,
+    provider: PROVIDERS.webb,
+    serviceDate: "2026-07-19",
+    chiefComplaint: "Hypothyroidism follow-up, TSH recheck",
+    hpi: "59-year-old female on levothyroxine 75 mcg. Asymptomatic. TSH drawn today to confirm dosing.",
+    dxText: ["Acquired hypothyroidism"],
+    procText: ["Established patient visit, low complexity", "Venipuncture", "TSH assay"],
+    fieldConfidence: {
+      chief_complaint: 0.98,
+      hpi: 0.95,
+      diagnoses: 0.96,
+      procedures: 0.94,
+    },
+    diagnoses: [
+      { code: "E03.9", description: "Hypothyroidism, unspecified", confidence: 0.95 },
+    ],
+    procedures: [
+      {
+        code: "99213",
+        description: "Office/outpatient visit, established patient, low complexity",
+        modifiers: [],
+        units: 1,
+        charge: money(125),
+        diagnosis_pointers: [1],
+        confidence: 0.96,
+      },
+      {
+        code: "36415",
+        description: "Collection of venous blood by venipuncture",
+        modifiers: [],
+        units: 1,
+        charge: money(12),
+        diagnosis_pointers: [1],
+        confidence: 0.97,
+      },
+      {
+        code: "84443",
+        description: "Thyroid stimulating hormone (TSH)",
+        modifiers: [],
+        units: 1,
+        charge: money(38),
+        diagnosis_pointers: [1],
+        confidence: 0.96,
+      },
+    ],
+    overall: 0.95,
+    findings: [
+      {
+        rule_id: "ELIGIBILITY_INACTIVE",
+        severity: "ERROR",
+        message:
+          "Eligibility: no active coverage found for member UHC115540098 on date of service (271 response: subscriber not found).",
+        procedure_code: null,
+        field: "patient.member_id",
+      },
+    ],
+    reasons: ["Eligibility: coverage inactive on date of service"],
+    enqueuedHoursAgo: 20,
+    controlNumber: 117,
+    eligibility: {
+      status: "not_found",
+      plan_name: "Unknown",
+      copay: money(0),
+      deductible_remaining: money(0),
+      termination_date: null,
+    },
+  }),
+  // ---- clearinghouse rejections (resubmit workqueue)
+  makeClaim({
+    itemId: "HITL-0012",
+    claimId: "CLM-2026-0116",
+    pat: PATIENTS.brooks,
+    provider: PROVIDERS.osei,
+    serviceDate: "2026-07-18",
+    chiefComplaint: "Contraceptive management, IUD check",
+    hpi: "42-year-old female, IUD placed 2024, presents for routine string check. No complaints.",
+    dxText: ["Encounter for surveillance of intrauterine contraceptive device"],
+    procText: ["Established patient visit, low complexity"],
+    fieldConfidence: {
+      chief_complaint: 0.98,
+      hpi: 0.96,
+      diagnoses: 0.97,
+      procedures: 0.95,
+    },
+    diagnoses: [
+      {
+        code: "Z30.431",
+        description:
+          "Encounter for routine checking of intrauterine contraceptive device",
+        confidence: 0.97,
+      },
+    ],
+    procedures: [
+      {
+        code: "99213",
+        description: "Office/outpatient visit, established patient, low complexity",
+        modifiers: [],
+        units: 1,
+        charge: money(125),
+        diagnosis_pointers: [1],
+        confidence: 0.96,
+      },
+    ],
+    overall: 0.96,
+    findings: [
+      {
+        rule_id: "CH_REJECT_277CA",
+        severity: "ERROR",
+        message:
+          "Clearinghouse rejected: 277CA A3:21 — invalid subscriber ID. Verify member ID and resubmit.",
+        procedure_code: null,
+        field: "patient.member_id",
+      },
+    ],
+    reasons: ["Clearinghouse rejection: 277CA A3:21"],
+    enqueuedHoursAgo: 30,
+    controlNumber: 116,
+    lifecycle: "clearinghouse_rejected",
+    chRejection: "277CA A3:21 — invalid subscriber ID",
+  }),
+  makeClaim({
+    itemId: "HITL-0013",
+    claimId: "CLM-2026-0114",
+    pat: PATIENTS.kim,
+    provider: PROVIDERS.chen,
+    serviceDate: "2026-07-17",
+    chiefComplaint: "Hypertension follow-up, medication titration",
+    hpi: "47-year-old male on lisinopril 10 mg with home BP averaging 148/92. Dose increased to 20 mg.",
+    dxText: ["Essential hypertension"],
+    procText: ["Established patient visit, moderate complexity"],
+    fieldConfidence: {
+      chief_complaint: 0.98,
+      hpi: 0.95,
+      diagnoses: 0.97,
+      procedures: 0.94,
+    },
+    diagnoses: [
+      { code: "I10", description: "Essential (primary) hypertension", confidence: 0.98 },
+    ],
+    procedures: [
+      {
+        code: "99214",
+        description: "Office/outpatient visit, established patient, moderate complexity",
+        modifiers: [],
+        units: 1,
+        charge: money(185),
+        diagnosis_pointers: [1],
+        confidence: 0.95,
+      },
+    ],
+    overall: 0.95,
+    findings: [
+      {
+        rule_id: "CH_REJECT_999",
+        severity: "ERROR",
+        message:
+          "Clearinghouse rejected: 999 IK5 R — segment syntax error in SV1. Regenerate the 837P and resubmit.",
+        procedure_code: "99214",
+        field: null,
+      },
+    ],
+    reasons: ["Clearinghouse rejection: 999 IK5 R"],
+    enqueuedHoursAgo: 44,
+    controlNumber: 114,
+    lifecycle: "clearinghouse_rejected",
+    chRejection: "999 IK5 R — segment syntax error in SV1",
   }),
 ];
 

@@ -3,6 +3,7 @@ import { Check, FileQuestion, Inbox, X } from "lucide-react";
 
 import { useAppealCases, useAppealDecision } from "../../api/queries";
 import { CodeChip } from "../../components/CodeChip";
+import { InfoTip } from "../../components/InfoTip";
 import { DataTable, type Column } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
 import { SidePanel } from "../../components/SidePanel";
@@ -14,7 +15,7 @@ import {
 } from "../../lib/appealUi";
 import { carcDescription } from "../../lib/carcRarc";
 import { ageFrom, formatMoney } from "../../lib/format";
-import { usePortalSession } from "../../lib/identity";
+import { PAYER_SIMULATOR_NOTE, usePortalSession } from "../../lib/identity";
 import type { AppealCase } from "../../types";
 
 export function PayerInbox() {
@@ -96,6 +97,12 @@ export function PayerInbox() {
           payerName
             ? `${open.length} open of ${rows.length} received — ${payerName}`
             : undefined
+        }
+        actions={
+          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+            Simulator
+            <InfoTip text={PAYER_SIMULATOR_NOTE} />
+          </span>
         }
       />
       <div className="min-h-0 flex-1 overflow-auto p-6">

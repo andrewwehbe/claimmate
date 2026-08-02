@@ -12,6 +12,7 @@ import type { CodedClaim, CodedDiagnosis, CodedProcedure } from "./claim";
 import type { DecimalString, ISODate, ISODateTime } from "./common";
 import type { ClaimPayment, DenialAnalysis } from "./era";
 import type { HITLQueueItem, RoutingDecision, ScrubFinding } from "./hitl";
+import type { ClaimLifecycleStatus, EligibilityResult } from "./portal";
 
 export type ReviewStatus = "pending" | "approved" | "rejected";
 
@@ -36,6 +37,12 @@ export interface ClaimDetailView {
   /** Rendered X12 837P output for this claim. */
   edi_837p: string;
   review_status: ReviewStatus;
+  /** 270/271 eligibility result for the subscriber on the date of service. */
+  eligibility: EligibilityResult;
+  /** Clearinghouse lifecycle position. */
+  lifecycle_status: ClaimLifecycleStatus;
+  /** 277CA / 999 rejection text when lifecycle_status is clearinghouse_rejected. */
+  clearinghouse_rejection: string | null;
 }
 
 /** Body for POST /api/claims/:id/codes. */

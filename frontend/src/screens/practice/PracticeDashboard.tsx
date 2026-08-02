@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { CircleCheck } from "lucide-react";
+import { CircleCheck, FileDown } from "lucide-react";
 
 import { usePracticeOverview } from "../../api/queries";
 import { CodeChip } from "../../components/CodeChip";
@@ -67,6 +67,12 @@ export function PracticeDashboard() {
       <TopBar
         title="Dashboard"
         meta={data ? data.account.legal_name : undefined}
+        actions={
+          <Link to="/practice/report" className="btn-secondary h-8 px-2.5 text-xs">
+            <FileDown size={13} />
+            Download monthly report
+          </Link>
+        }
       />
       <div className="min-h-0 flex-1 overflow-y-auto p-6">
         {isLoading ? (
@@ -100,7 +106,7 @@ export function PracticeDashboard() {
               </div>
             )}
 
-            <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <div className="mb-6 grid grid-cols-2 gap-4 xl:grid-cols-5">
               <Card
                 label="Claims this month"
                 value={data.claims_this_month.toLocaleString("en-US")}
@@ -114,6 +120,11 @@ export function PracticeDashboard() {
                 label="Recovered this quarter"
                 value={formatMoney(data.recovered_this_quarter)}
                 note="from overturned denials"
+              />
+              <Card
+                label="Posted to your ledger"
+                value={formatMoney(data.posted_to_ledger)}
+                note="posted remittance dollars"
               />
               <div className="border border-gray-200 bg-white p-4">
                 <div className="text-xs font-medium text-gray-500">

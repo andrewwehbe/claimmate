@@ -16,7 +16,8 @@ import type { SyncRun } from "../../types";
 import { INTEGRATION_TONE } from "./PracticeDashboard";
 
 const METHOD_LABELS = {
-  direct_db: "Direct database connection",
+  direct_db: "Direct database connection (legacy)",
+  vendor_api: "PM/EHR vendor API",
   fhir_api: "FHIR API",
   sftp_flat_file: "SFTP flat-file export",
 } as const;

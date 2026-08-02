@@ -1,5 +1,7 @@
 /** Thin fetch wrapper for the JSON API (mocked by MSW in dev). */
 
+import { getActiveSession } from "../lib/identity";
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -9,8 +11,16 @@ export class ApiError extends Error {
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  // Demo audit-log actor attribution: identify the acting portal session.
+  const session = getActiveSession();
+  const actorHeaders: Record<string, string> = session
+    ? {
+        "x-demo-actor": `${session.identity.name} · ${session.identity.role}`,
+        "x-demo-portal": session.portal,
+      }
+    : {};
   const res = await fetch(path, {
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...actorHeaders },
     ...init,
   });
   if (!res.ok) {

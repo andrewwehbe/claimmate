@@ -11,7 +11,11 @@ import type { DecimalString, ISODate, ISODateTime } from "./common";
 
 // ------------------------------------------------------------- practices
 
-export type IntegrationMethod = "direct_db" | "fhir_api" | "sftp_flat_file";
+export type IntegrationMethod =
+  | "direct_db" // legacy clients only; no longer offered in the signup wizard
+  | "vendor_api"
+  | "fhir_api"
+  | "sftp_flat_file";
 
 export type IntegrationStatus = "pending" | "connected" | "degraded" | "error";
 
@@ -66,12 +70,21 @@ export interface SyncRun {
   error_message: string | null;
 }
 
-export type PracticeClaimStatus =
-  | "submitted"
+/**
+ * Clearinghouse claim lifecycle (mirrors the engine's status vocabulary):
+ * generated -> submitted_to_clearinghouse -> clearinghouse_accepted |
+ * clearinghouse_rejected -> payer_received -> paid | denied.
+ * denied -> paid after appeal overturn; clearinghouse_rejected ->
+ * submitted_to_clearinghouse on resubmit.
+ */
+export type ClaimLifecycleStatus =
+  | "generated"
+  | "submitted_to_clearinghouse"
+  | "clearinghouse_accepted"
+  | "clearinghouse_rejected"
+  | "payer_received"
   | "paid"
-  | "denied"
-  | "appealing"
-  | "recovered";
+  | "denied";
 
 /** Row for GET /api/practices/:id/claims (read-only status list). */
 export interface PracticeClaimRow {
@@ -81,7 +94,7 @@ export interface PracticeClaimRow {
   service_date: ISODate;
   payer_name: string;
   amount: DecimalString;
-  status: PracticeClaimStatus;
+  status: ClaimLifecycleStatus;
 }
 
 /** Response for GET /api/practices/:id/overview. */
@@ -91,7 +104,23 @@ export interface PracticeOverview {
   claims_this_month: number;
   denial_rate: number;
   recovered_this_quarter: DecimalString;
+  /** Sum of POSTED remittance dollars for this practice. */
+  posted_to_ledger: DecimalString;
   recovered_denials: RecoveredDenialRow[];
+}
+
+// ------------------------------------------------------------ eligibility
+
+export type EligibilityStatus = "active" | "inactive" | "terminated" | "not_found";
+
+/** 270/271 eligibility check result attached to a claim (view model). */
+export interface EligibilityResult {
+  status: EligibilityStatus;
+  plan_name: string;
+  copay: DecimalString;
+  deductible_remaining: DecimalString;
+  termination_date: ISODate | null;
+  checked_at: ISODateTime;
 }
 
 export interface RecoveredDenialRow {
@@ -111,6 +140,20 @@ export type AppealCaseStatus =
   | "payer_responded"
   | "overturned"
   | "upheld";
+
+/** How the appeal is (or will be) filed with the payer. */
+export type SubmissionChannel =
+  | "payer_portal"
+  | "fax"
+  | "certified_mail"
+  | "electronic_275";
+
+/** Escalation ladder. external_review is terminal. */
+export type AppealLevel =
+  | "reconsideration"
+  | "level_1"
+  | "level_2"
+  | "external_review";
 
 export interface AppealEvent {
   at: ISODateTime;
@@ -133,8 +176,17 @@ export interface AppealCase {
   /** Appeal letter sent to payer (null while drafting). */
   submitted_at: ISODateTime | null;
   decided_at: ISODateTime | null;
-  /** End of the payer's appeal filing window. */
+  /**
+   * End of the payer's appeal filing window, computed from the level- and
+   * payer-specific deadline rules (see lib/appealRules.ts).
+   */
   appeal_deadline: ISODate;
+  level: AppealLevel;
+  submission_channel: SubmissionChannel;
+  /** Set when this appeal was created by escalating an upheld predecessor. */
+  predecessor_id: string | null;
+  /** Set when an upheld appeal has been escalated to the next level. */
+  successor_id: string | null;
   letter_subject: string;
   letter_body: string;
   citations: Citation[];
@@ -166,7 +218,18 @@ export type PayerDecisionAction = "overturn" | "uphold" | "request_records";
 
 // ----------------------------------------------------------- remittances
 
-/** Row for GET /api/payer/remittances. */
+export interface RemitServiceLine {
+  procedure_code: string;
+  paid_amount: DecimalString;
+}
+
+export interface RemitAdjustment {
+  group_code: string;
+  reason_code: string;
+  amount: DecimalString;
+}
+
+/** Row for GET /api/remittances (ops) and /api/payer/remittances (simulator). */
 export interface RemittanceRow {
   remit_id: string;
   payer_name: string;
@@ -175,4 +238,31 @@ export interface RemittanceRow {
   payment_amount: DecimalString;
   claims_count: number;
   trace_number: string;
+  /** Linked claim / client practice, when the remit maps to one claim. */
+  claim_id: string | null;
+  practice_id: string | null;
+  service_lines: RemitServiceLine[];
+  adjustments: RemitAdjustment[];
+  /** Payment posting state. Posting is one-way (toggle once, audit-logged). */
+  posted: boolean;
+}
+
+// --------------------------------------------------------------- audit log
+
+/**
+ * Append-only audit record. There is no update or delete path for these —
+ * the mock store only ever appends.
+ */
+export interface AuditEvent {
+  id: string;
+  timestamp: ISODateTime;
+  /** Demo identity: "Name · Role". */
+  actor: string;
+  portal: string;
+  /** e.g. "claim.approve", "appeal.escalate", "payer.overturn". */
+  action: string;
+  entity_type: string;
+  entity_id: string;
+  /** Short before -> after text. */
+  summary: string;
 }

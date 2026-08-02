@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -12,6 +12,7 @@ import {
   ListChecks,
   PlugZap,
   Receipt,
+  ScrollText,
   UserRound,
 } from "lucide-react";
 
@@ -23,11 +24,14 @@ import {
   loadIdentity,
   OPS_IDENTITIES,
   PAYER_IDENTITIES,
+  PAYER_SIMULATOR_NOTE,
   PORTALS,
   saveIdentity,
+  setActiveSession,
   type DemoIdentity,
   type PortalId,
 } from "../lib/identity";
+import { InfoTip } from "../components/InfoTip";
 
 const NAV: Record<PortalId, NavItem[]> = {
   practice: [
@@ -39,7 +43,9 @@ const NAV: Record<PortalId, NavItem[]> = {
     { to: "/ops/queue", label: "Review Queue", icon: Inbox },
     { to: "/ops/appeals", label: "Appeals Workbench", icon: Gavel },
     { to: "/ops/denials", label: "Denials & Appeals", icon: FileWarning },
+    { to: "/ops/remittances", label: "Remittances", icon: Receipt },
     { to: "/ops/clients", label: "Clients", icon: Building2 },
+    { to: "/ops/audit", label: "Audit Log", icon: ScrollText },
     { to: "/ops/dashboard", label: "Dashboard", icon: Activity },
   ],
   payer: [
@@ -57,6 +63,12 @@ export function PortalShell({ portal }: { portal: PortalId }) {
   const [identity, setIdentityState] = useState<DemoIdentity | null>(() =>
     loadIdentity(portal),
   );
+
+  // Mirror the mounted session for audit-log actor attribution (fetch headers).
+  useEffect(() => {
+    setActiveSession(identity ? { portal, identity } : null);
+    return () => setActiveSession(null);
+  }, [portal, identity]);
 
   if (!identity) {
     return (
@@ -122,6 +134,7 @@ function PortalEntry({
           <div className="mb-1 flex items-center gap-2">
             <Icon size={16} className="text-gray-500" />
             <h1 className="text-md font-semibold text-ink">{meta.label}</h1>
+            {portal === "payer" && <InfoTip text={PAYER_SIMULATOR_NOTE} />}
           </div>
           <p className="mb-4 text-sm text-gray-500">{meta.tagline}</p>
           <div className="mb-3 border-l-2 border-severity-warning bg-amber-50/60 px-3 py-2 text-xs text-gray-600">

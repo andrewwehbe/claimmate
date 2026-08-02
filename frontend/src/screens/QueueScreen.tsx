@@ -12,7 +12,12 @@ import { TopBar } from "../components/TopBar";
 import { ageFrom, classNames, formatMoney } from "../lib/format";
 import type { QueueItemView } from "../types";
 
-type Tab = "all" | "low_confidence" | "high_value" | "scrub_errors";
+type Tab =
+  | "all"
+  | "low_confidence"
+  | "high_value"
+  | "scrub_errors"
+  | "eligibility";
 
 const HIGH_VALUE_THRESHOLD = 1000;
 const LOW_CONFIDENCE_THRESHOLD = 0.7;
@@ -22,6 +27,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: "low_confidence", label: "Low Confidence" },
   { id: "high_value", label: "High Value" },
   { id: "scrub_errors", label: "Scrub Errors" },
+  { id: "eligibility", label: "Eligibility" },
 ];
 
 function matchesTab(item: QueueItemView, tab: Tab): boolean {
@@ -34,12 +40,16 @@ function matchesTab(item: QueueItemView, tab: Tab): boolean {
       return Number(item.claim_value) >= HIGH_VALUE_THRESHOLD;
     case "scrub_errors":
       return item.findings.some((f) => f.severity === "ERROR");
+    case "eligibility":
+      return item.findings.some((f) => f.rule_id.startsWith("ELIGIBILITY"));
   }
 }
 
 function reasonTone(reason: string): BadgeTone {
   const r = reason.toLowerCase();
   if (r.includes("scrub error")) return "red";
+  if (r.includes("eligibility")) return "red";
+  if (r.includes("clearinghouse")) return "red";
   if (r.includes("high-value")) return "blue";
   if (r.includes("confidence")) return "amber";
   return "neutral";

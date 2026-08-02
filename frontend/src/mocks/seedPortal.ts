@@ -17,15 +17,23 @@ import type {
   AppealCase,
   AppealCaseStatus,
   AppealEvent,
+  AppealLevel,
+  AuditEvent,
   Citation,
+  ClaimLifecycleStatus,
   DisputedService,
   PracticeAccount,
   PracticeClaimRow,
-  PracticeClaimStatus,
   RemittanceRow,
+  SubmissionChannel,
   SyncRun,
 } from "../types";
 import { CARC } from "../lib/carcRarc";
+import {
+  APPEAL_LEVEL_LONG,
+  deadlineDays,
+  SUBMISSION_CHANNEL_LABELS,
+} from "../lib/appealRules";
 
 const money = (n: number): string => n.toFixed(2);
 
@@ -257,7 +265,8 @@ interface AppealSeedArgs {
   openedDaysAgo: number;
   submittedDaysAgo: number | null;
   decidedDaysAgo: number | null;
-  deadlineDaysAhead: number;
+  level: AppealLevel;
+  channel: SubmissionChannel;
   service: DisputedService;
   responseNote?: string;
 }
@@ -296,8 +305,8 @@ function makeAppeal(a: AppealSeedArgs): AppealCase {
       },
       {
         at: daysAgo(a.submittedDaysAgo),
-        label: "Submitted to payer",
-        detail: `Filed with ${a.payerName} via payer portal.`,
+        label: `Submitted via ${SUBMISSION_CHANNEL_LABELS[a.channel]}`,
+        detail: `${APPEAL_LEVEL_LONG[a.level]} filed with ${a.payerName}.`,
       },
     );
   }
@@ -331,7 +340,14 @@ function makeAppeal(a: AppealSeedArgs): AppealCase {
     opened_at: daysAgo(a.openedDaysAgo),
     submitted_at: a.submittedDaysAgo === null ? null : daysAgo(a.submittedDaysAgo),
     decided_at: a.decidedDaysAgo === null ? null : daysAgo(a.decidedDaysAgo),
-    appeal_deadline: daysAhead(a.deadlineDaysAhead),
+    // Filing window runs from the denial date per level/payer rules.
+    appeal_deadline: daysAhead(
+      deadlineDays(a.level, a.payerName) - a.openedDaysAgo,
+    ),
+    level: a.level,
+    submission_channel: a.channel,
+    predecessor_id: null,
+    successor_id: null,
     letter_subject: `Appeal of claim ${a.claimId} — CARC ${a.carc} (${category.replace(/_/g, " ")})`,
     letter_body: [
       `To the Appeals Department, ${a.payerName}:`,
@@ -372,7 +388,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 4,
     submittedDaysAgo: 2,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 38,
+    level: "reconsideration",
+    channel: "payer_portal",
     service: {
       procedure_code: "93015",
       description: "Cardiovascular stress test",
@@ -390,7 +407,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 3,
     submittedDaysAgo: 1,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 52,
+    level: "reconsideration",
+    channel: "electronic_275",
     service: {
       procedure_code: "20610",
       description: "Major joint injection",
@@ -408,7 +426,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 1,
     submittedDaysAgo: null,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 58,
+    level: "reconsideration",
+    channel: "payer_portal",
     service: {
       procedure_code: "99215",
       description: "Office visit, high complexity",
@@ -423,10 +442,11 @@ export const APPEAL_SEEDS: AppealCase[] = [
     carc: "16",
     amount: 185,
     status: "drafting",
-    openedDaysAgo: 2,
+    openedDaysAgo: 50, // aging draft: deadline pressure (60d level-1 window)
     submittedDaysAgo: null,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 12,
+    level: "level_1",
+    channel: "fax",
     service: {
       procedure_code: "99214",
       description: "Office visit, moderate complexity",
@@ -444,7 +464,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 5,
     submittedDaysAgo: 3,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 41,
+    level: "reconsideration",
+    channel: "certified_mail",
     service: {
       procedure_code: "93306",
       description: "Echocardiogram, complete",
@@ -462,7 +483,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 7,
     submittedDaysAgo: 5,
     decidedDaysAgo: null,
-    deadlineDaysAhead: 33,
+    level: "level_1",
+    channel: "certified_mail",
     responseNote:
       "Payer requested complete operative note and prior imaging before reconsideration.",
     service: {
@@ -483,7 +505,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 12,
     submittedDaysAgo: 10,
     decidedDaysAgo: 7,
-    deadlineDaysAhead: 24,
+    level: "reconsideration",
+    channel: "payer_portal",
     service: {
       procedure_code: "93015",
       description: "Cardiovascular stress test",
@@ -501,7 +524,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 14,
     submittedDaysAgo: 12,
     decidedDaysAgo: 8,
-    deadlineDaysAhead: 18,
+    level: "reconsideration",
+    channel: "electronic_275",
     service: {
       procedure_code: "29881",
       description: "Knee arthroscopy with meniscectomy",
@@ -519,7 +543,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 11,
     submittedDaysAgo: 9,
     decidedDaysAgo: 7,
-    deadlineDaysAhead: 20,
+    level: "level_1",
+    channel: "fax",
     service: {
       procedure_code: "93306",
       description: "Echocardiogram, complete",
@@ -537,7 +562,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 17,
     submittedDaysAgo: 15,
     decidedDaysAgo: 10,
-    deadlineDaysAhead: 9,
+    level: "reconsideration",
+    channel: "certified_mail",
     service: {
       procedure_code: "90460",
       description: "Immunization administration with counseling",
@@ -555,7 +581,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 10,
     submittedDaysAgo: 8,
     decidedDaysAgo: 5,
-    deadlineDaysAhead: 15,
+    level: "reconsideration",
+    channel: "payer_portal",
     service: {
       procedure_code: "17110",
       description: "Destruction of benign lesions",
@@ -573,7 +600,8 @@ export const APPEAL_SEEDS: AppealCase[] = [
     openedDaysAgo: 13,
     submittedDaysAgo: 11,
     decidedDaysAgo: 7,
-    deadlineDaysAhead: 11,
+    level: "level_1",
+    channel: "fax",
     service: {
       procedure_code: "76817",
       description: "Transvaginal ultrasound",
@@ -637,9 +665,10 @@ export const SYNC_RUN_SEEDS: SyncRun[] = [
 const CLAIM_FIRST = ["Nora", "Elias", "Ava", "Miguel", "Ruth", "Ken", "Fatima", "Owen", "Iris", "Leo", "Tessa", "Hugo"];
 const CLAIM_LAST = ["Whitman", "Vargas", "Cole", "Bishop", "Ito", "Farrell", "Nassar", "Doyle", "Klein", "Marsh", "Ortiz", "Beck"];
 const CLAIM_PAYERS = ["Aetna PPO", "UnitedHealthcare", "Cigna", "BCBS of Illinois", "Humana", "Medicare Part B"];
-const CLAIM_STATUSES: PracticeClaimStatus[] = [
-  "paid", "paid", "paid", "submitted", "paid", "denied", "paid", "appealing",
-  "paid", "recovered", "submitted", "paid",
+const CLAIM_STATUSES: ClaimLifecycleStatus[] = [
+  "paid", "paid", "payer_received", "submitted_to_clearinghouse", "paid",
+  "denied", "clearinghouse_accepted", "denied", "payer_received", "paid",
+  "clearinghouse_rejected", "generated",
 ];
 const CLAIM_AMOUNTS = [125, 185, 240, 950, 76, 310, 185, 1540, 130, 685, 445, 92];
 
@@ -662,20 +691,52 @@ export function practiceClaims(practiceId: string): PracticeClaimRow[] {
 
 // ------------------------------------------------------------- remittances
 
-/** Remittance list per payer, derived from decided appeals + denial history. */
-export function buildRemittances(appeals: AppealCase[]): RemittanceRow[] {
+/** Build one remittance row from a decided appeal. */
+export function remittanceFromAppeal(
+  a: AppealCase,
+  opts: { posted: boolean; methodSeed?: number },
+): RemittanceRow {
+  const overturned = a.status === "overturned";
+  return {
+    remit_id: `RMT-${a.appeal_id.slice(-4)}`,
+    payer_name: a.payer_name,
+    payment_date: (a.decided_at ?? new Date().toISOString()).slice(0, 10),
+    payment_method: (opts.methodSeed ?? 0) % 3 === 2 ? "CHK" : "ACH",
+    payment_amount: overturned ? a.denied_amount : "0.00",
+    claims_count: 1,
+    trace_number: `TRN${String(881000 + (opts.methodSeed ?? 0) * 37)}`,
+    claim_id: a.claim_id,
+    practice_id: a.practice_id,
+    service_lines: a.disputed_services.map((s) => ({
+      procedure_code: s.procedure_code,
+      paid_amount: overturned ? s.charge_amount : "0.00",
+    })),
+    adjustments: overturned
+      ? []
+      : [
+          {
+            group_code: "CO",
+            reason_code: a.carc_code,
+            amount: a.denied_amount,
+          },
+        ],
+    posted: opts.posted,
+  };
+}
+
+/**
+ * Initial remittance store: rows for the decided seed appeals (APL-0010 left
+ * Unposted to demo payment posting) + routine non-appeal payment cycles.
+ */
+export function buildRemittanceSeeds(appeals: AppealCase[]): RemittanceRow[] {
   const rows: RemittanceRow[] = appeals
     .filter((a) => a.decided_at !== null)
-    .map((a, i) => ({
-      remit_id: `RMT-${a.appeal_id.slice(-4)}`,
-      payer_name: a.payer_name,
-      payment_date: a.decided_at!.slice(0, 10),
-      payment_method: i % 3 === 2 ? "CHK" : "ACH",
-      payment_amount:
-        a.status === "overturned" ? a.denied_amount : "0.00",
-      claims_count: 1,
-      trace_number: `TRN${String(881000 + i * 37)}`,
-    }));
+    .map((a, i) =>
+      remittanceFromAppeal(a, {
+        posted: a.appeal_id !== "APL-0010", // leave one Unposted for the demo
+        methodSeed: i,
+      }),
+    );
   // Routine (non-appeal) remittance cycles so the list reads realistically.
   const routine: [string, number, number, number][] = [
     ["Aetna PPO", 3, 14832.4, 41],
@@ -694,7 +755,60 @@ export function buildRemittances(appeals: AppealCase[]): RemittanceRow[] {
       payment_amount: money(amount),
       claims_count: count,
       trace_number: `TRN${String(770500 + i * 91)}`,
+      claim_id: null,
+      practice_id: null,
+      service_lines: [],
+      adjustments: [],
+      posted: true,
     });
   });
   return rows.sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+}
+
+// ---------------------------------------------------------------- audit log
+
+/** Seeded audit history (append-only; runtime actions append after these). */
+export function buildAuditSeeds(): AuditEvent[] {
+  const OPS = "Alex Reyes · Denials Operations Lead";
+  const OPS2 = "Mia Tran · RCM Operations Analyst";
+  const AETNA = "Aetna Health Inc · Appeals Reviewer";
+  const UHC = "UnitedHealthcare · Appeals Reviewer";
+  let n = 0;
+  const ev = (
+    daysBack: number,
+    actor: string,
+    portal: string,
+    action: string,
+    entityType: string,
+    entityId: string,
+    summary: string,
+  ): AuditEvent => ({
+    id: `AUD-${String(++n).padStart(4, "0")}`,
+    timestamp: daysAgo(daysBack),
+    actor,
+    portal,
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    summary,
+  });
+  return [
+    ev(6.2, "Sam Delgado · Practice signup", "practice", "practice.signup", "practice", "PRAC-008", "none -> account created (Granite State Behavioral Health, pending integration)"),
+    ev(5.1, OPS2, "ops", "sync.rerun", "practice", "PRAC-005", "sync requested -> failed (SFTP authentication)"),
+    ev(15, OPS, "ops", "appeal.submit", "appeal", "APL-0010", "drafting -> awaiting_payer (via certified mail)"),
+    ev(12, OPS, "ops", "appeal.submit", "appeal", "APL-0008", "drafting -> awaiting_payer (via electronic 275)"),
+    ev(11, OPS2, "ops", "appeal.submit", "appeal", "APL-0012", "drafting -> awaiting_payer (via fax)"),
+    ev(10, OPS, "ops", "appeal.submit", "appeal", "APL-0007", "drafting -> awaiting_payer (via payer portal)"),
+    ev(10, AETNA, "payer", "payer.overturn", "appeal", "APL-0010", "awaiting_payer -> overturned ($950.00)"),
+    ev(9, OPS2, "ops", "appeal.submit", "appeal", "APL-0009", "drafting -> awaiting_payer (via fax)"),
+    ev(8, UHC, "payer", "payer.overturn", "appeal", "APL-0008", "awaiting_payer -> overturned ($2,210.00)"),
+    ev(8, OPS, "ops", "appeal.submit", "appeal", "APL-0011", "drafting -> awaiting_payer (via payer portal)"),
+    ev(7, AETNA, "payer", "payer.overturn", "appeal", "APL-0007", "awaiting_payer -> overturned ($1,240.00)"),
+    ev(7, AETNA, "payer", "payer.uphold", "appeal", "APL-0012", "awaiting_payer -> upheld"),
+    ev(6.8, OPS, "ops", "remittance.post", "remittance", "RMT-0007", "unposted -> posted ($1,240.00)"),
+    ev(6.5, OPS2, "ops", "remittance.post", "remittance", "RMT-0008", "unposted -> posted ($2,210.00)"),
+    ev(2.5, OPS, "ops", "claim.approve", "claim", "CLM-2026-0146", "pending -> approved"),
+    ev(1.8, OPS2, "ops", "claim.reject", "claim", "CLM-2026-0144", "pending -> rejected (documentation insufficient)"),
+    ev(0.9, OPS, "ops", "claim.codes_edit", "claim", "CLM-2026-0143", "99213 -> 99214 (documentation supports moderate complexity)"),
+  ];
 }

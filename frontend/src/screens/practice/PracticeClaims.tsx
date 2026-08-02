@@ -8,14 +8,27 @@ import { StatusBadge, type BadgeTone } from "../../components/StatusBadge";
 import { TopBar } from "../../components/TopBar";
 import { formatDate, formatMoney } from "../../lib/format";
 import { usePortalSession } from "../../lib/identity";
-import type { PracticeClaimRow, PracticeClaimStatus } from "../../types";
+import type { ClaimLifecycleStatus, PracticeClaimRow } from "../../types";
 
-const STATUS_TONE: Record<PracticeClaimStatus, BadgeTone> = {
-  submitted: "blue",
+/** Same lifecycle vocabulary as ops, with practice-friendly labels. */
+const STATUS_LABELS: Record<ClaimLifecycleStatus, string> = {
+  generated: "Preparing",
+  submitted_to_clearinghouse: "Submitted",
+  clearinghouse_accepted: "Accepted at clearinghouse",
+  clearinghouse_rejected: "Rejected at clearinghouse",
+  payer_received: "With payer",
+  paid: "Paid",
+  denied: "Denied",
+};
+
+const STATUS_TONE: Record<ClaimLifecycleStatus, BadgeTone> = {
+  generated: "neutral",
+  submitted_to_clearinghouse: "blue",
+  clearinghouse_accepted: "blue",
+  clearinghouse_rejected: "red",
+  payer_received: "amber",
   paid: "green",
   denied: "red",
-  appealing: "amber",
-  recovered: "green",
 };
 
 export function PracticeClaims() {
@@ -68,7 +81,11 @@ export function PracticeClaims() {
       header: "Status",
       sortValue: (r) => r.status,
       render: (r) => (
-        <StatusBadge label={r.status} tone={STATUS_TONE[r.status]} />
+        <StatusBadge
+          label={STATUS_LABELS[r.status]}
+          tone={STATUS_TONE[r.status]}
+          title={r.status}
+        />
       ),
     },
   ];

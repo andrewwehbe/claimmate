@@ -6,11 +6,15 @@ import { DashboardScreen } from "./screens/DashboardScreen";
 import { DenialsScreen } from "./screens/DenialsScreen";
 import { LandingScreen } from "./screens/LandingScreen";
 import { QueueScreen } from "./screens/QueueScreen";
+import { TrustScreen } from "./screens/TrustScreen";
 import { AppealsScreen } from "./screens/ops/AppealsScreen";
+import { AuditScreen } from "./screens/ops/AuditScreen";
 import { ClientsScreen } from "./screens/ops/ClientsScreen";
+import { OpsRemittances } from "./screens/ops/OpsRemittances";
 import { PracticeClaims } from "./screens/practice/PracticeClaims";
 import { PracticeDashboard } from "./screens/practice/PracticeDashboard";
 import { PracticeIntegration } from "./screens/practice/PracticeIntegration";
+import { PracticeReport } from "./screens/practice/PracticeReport";
 import { SignupWizard } from "./screens/practice/SignupWizard";
 import { PayerInbox } from "./screens/payer/PayerInbox";
 import { PayerRemittances } from "./screens/payer/PayerRemittances";
@@ -26,7 +30,10 @@ export default function App() {
     <Routes>
       {/* Public */}
       <Route path="/" element={<LandingScreen />} />
+      <Route path="/trust" element={<TrustScreen />} />
       <Route path="/practice/signup" element={<SignupWizard />} />
+      {/* Print-optimized report (identity-gated internally, no SideNav) */}
+      <Route path="/practice/report" element={<PracticeReport />} />
 
       {/* Practice portal */}
       <Route path="/practice" element={<PortalShell portal="practice" />}>
@@ -44,6 +51,8 @@ export default function App() {
         <Route path="dashboard" element={<DashboardScreen />} />
         <Route path="clients" element={<ClientsScreen />} />
         <Route path="appeals" element={<AppealsScreen />} />
+        <Route path="remittances" element={<OpsRemittances />} />
+        <Route path="audit" element={<AuditScreen />} />
       </Route>
 
       {/* Payer portal */}

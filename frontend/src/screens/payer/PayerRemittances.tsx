@@ -3,9 +3,10 @@ import { Receipt } from "lucide-react";
 import { useRemittances } from "../../api/queries";
 import { DataTable, type Column } from "../../components/DataTable";
 import { EmptyState } from "../../components/EmptyState";
+import { InfoTip } from "../../components/InfoTip";
 import { TopBar } from "../../components/TopBar";
 import { formatDate, formatMoney } from "../../lib/format";
-import { usePortalSession } from "../../lib/identity";
+import { PAYER_SIMULATOR_NOTE, usePortalSession } from "../../lib/identity";
 import type { RemittanceRow } from "../../types";
 
 export function PayerRemittances() {
@@ -67,6 +68,12 @@ export function PayerRemittances() {
           data
             ? `${data.length} issued 835s — ${payerName ?? "all payers"}`
             : undefined
+        }
+        actions={
+          <span className="flex items-center gap-1.5 text-xs text-gray-500">
+            Simulator
+            <InfoTip text={PAYER_SIMULATOR_NOTE} />
+          </span>
         }
       />
       <div className="min-h-0 flex-1 overflow-auto p-6">

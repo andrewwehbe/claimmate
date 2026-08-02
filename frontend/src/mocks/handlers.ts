@@ -11,6 +11,7 @@ import type {
   AppealsKpis,
   AppealsResponse,
   AppealView,
+  AuditEvent,
   ClaimDetailView,
   DashboardMetrics,
   DenialRecordView,
@@ -19,10 +20,17 @@ import type {
   PracticeOverview,
   PracticeSignupBody,
   QueueItemView,
+  RemittanceRow,
   ReviewStatus,
   SyncRun,
   UpdateCodesBody,
 } from "../types";
+import {
+  APPEAL_LEVEL_LONG,
+  deadlineDays,
+  NEXT_LEVEL,
+  SUBMISSION_CHANNEL_LABELS,
+} from "../lib/appealRules";
 import {
   CLAIM_SEEDS,
   DASHBOARD_SEED,
@@ -31,9 +39,11 @@ import {
 } from "./seed";
 import {
   APPEAL_SEEDS,
-  buildRemittances,
+  buildAuditSeeds,
+  buildRemittanceSeeds,
   PRACTICE_SEEDS,
   practiceClaims,
+  remittanceFromAppeal,
   SYNC_RUN_SEEDS,
 } from "./seedPortal";
 
@@ -47,6 +57,9 @@ interface Store {
   practices: PracticeAccount[];
   syncRuns: SyncRun[];
   appealCases: AppealCase[];
+  remittances: RemittanceRow[];
+  /** Append-only: rows are only ever pushed, never edited or removed. */
+  audit: AuditEvent[];
 }
 
 const store: Store = {
@@ -61,7 +74,35 @@ const store: Store = {
   practices: structuredClone(PRACTICE_SEEDS),
   syncRuns: structuredClone(SYNC_RUN_SEEDS),
   appealCases: structuredClone(APPEAL_SEEDS),
+  remittances: buildRemittanceSeeds(APPEAL_SEEDS),
+  audit: buildAuditSeeds(),
 };
+
+let auditCounter = store.audit.length;
+
+/** Append an audit event, attributing the acting demo identity from headers. */
+function audit(
+  request: Request,
+  action: string,
+  entityType: string,
+  entityId: string,
+  summary: string,
+  actorOverride?: string,
+): void {
+  store.audit.push({
+    id: `AUD-${String(++auditCounter).padStart(4, "0")}`,
+    timestamp: new Date().toISOString(),
+    actor:
+      actorOverride ??
+      request.headers.get("x-demo-actor") ??
+      "Unknown · Demo session",
+    portal: request.headers.get("x-demo-portal") ?? "unknown",
+    action,
+    entity_type: entityType,
+    entity_id: entityId,
+    summary,
+  });
+}
 
 const DAY = 86_400_000;
 
@@ -123,23 +164,41 @@ export const handlers = [
     return HttpResponse.json(detail);
   }),
 
-  http.post("/api/claims/:id/approve", async ({ params }) => {
+  http.post("/api/claims/:id/approve", async ({ params, request }) => {
     await delay(LATENCY);
     const id = String(params.id);
-    if (!store.claims.has(id)) {
+    const detail = store.claims.get(id);
+    if (!detail) {
       return HttpResponse.json({ detail: "claim not found" }, { status: 404 });
     }
     setReviewStatus(id, "approved");
+    // Approval (re)submits: generated / clearinghouse_rejected -> clearinghouse.
+    const fromStatus = detail.lifecycle_status;
+    if (
+      fromStatus === "generated" ||
+      fromStatus === "clearinghouse_rejected"
+    ) {
+      detail.lifecycle_status = "submitted_to_clearinghouse";
+      detail.clearinghouse_rejection = null;
+    }
+    audit(
+      request,
+      "claim.approve",
+      "claim",
+      id,
+      `pending -> approved (${fromStatus} -> ${detail.lifecycle_status})`,
+    );
     return HttpResponse.json({ claim_id: id, review_status: "approved" });
   }),
 
-  http.post("/api/claims/:id/reject", async ({ params }) => {
+  http.post("/api/claims/:id/reject", async ({ params, request }) => {
     await delay(LATENCY);
     const id = String(params.id);
     if (!store.claims.has(id)) {
       return HttpResponse.json({ detail: "claim not found" }, { status: 404 });
     }
     setReviewStatus(id, "rejected");
+    audit(request, "claim.reject", "claim", id, "pending -> rejected");
     return HttpResponse.json({ claim_id: id, review_status: "rejected" });
   }),
 
@@ -151,13 +210,16 @@ export const handlers = [
       return HttpResponse.json({ detail: "claim not found" }, { status: 404 });
     }
     const body = (await request.json()) as UpdateCodesBody;
+    const before = detail.claim.procedures.map((p) => p.code).join(",");
     detail.claim.diagnoses = body.diagnoses;
     detail.claim.procedures = body.procedures;
+    const after = body.procedures.map((p) => p.code).join(",");
     const row = store.queue.find((q) => q.claim_id === id);
     if (row) {
       const total = body.procedures.reduce((s, p) => s + Number(p.charge), 0);
       row.claim_value = total.toFixed(2);
     }
+    audit(request, "claim.codes_edit", "claim", id, `${before} -> ${after}`);
     return HttpResponse.json(detail);
   }),
 
@@ -242,6 +304,14 @@ export const handlers = [
       recovered_this_quarter: "0.00",
     };
     store.practices.push(account);
+    audit(
+      request,
+      "practice.signup",
+      "practice",
+      account.practice_id,
+      `none -> account created (${account.legal_name}, pending integration)`,
+      `${account.contact_name} · Practice signup`,
+    );
     return HttpResponse.json(account, { status: 201 });
   }),
 
@@ -265,6 +335,9 @@ export const handlers = [
         recovered_amount: a.denied_amount,
         decided_at: a.decided_at!,
       }));
+    const posted = store.remittances
+      .filter((r) => r.practice_id === id && r.posted)
+      .reduce((s, r) => s + Number(r.payment_amount), 0);
     const overview: PracticeOverview = {
       account,
       last_sync: runs[0] ?? null,
@@ -273,6 +346,7 @@ export const handlers = [
       recovered_this_quarter: recovered
         .reduce((s, r) => s + Number(r.recovered_amount), 0)
         .toFixed(2),
+      posted_to_ledger: posted.toFixed(2),
       recovered_denials: recovered,
     };
     return HttpResponse.json(overview);
@@ -286,7 +360,7 @@ export const handlers = [
     return HttpResponse.json(runs);
   }),
 
-  http.post("/api/practices/:id/syncs/run", async ({ params }) => {
+  http.post("/api/practices/:id/syncs/run", async ({ params, request }) => {
     await delay(900); // simulated sync run
     const id = String(params.id);
     const account = store.practices.find((p) => p.practice_id === id);
@@ -313,6 +387,13 @@ export const handlers = [
     };
     store.syncRuns.push(run);
     if (run.status !== "failed") account.last_sync_at = run.finished_at;
+    audit(
+      request,
+      "sync.rerun",
+      "practice",
+      id,
+      `sync requested -> ${run.status} (${run.rows_imported} imported, ${run.rows_failed} failed)`,
+    );
     return HttpResponse.json(run, { status: 201 });
   }),
 
@@ -354,6 +435,7 @@ export const handlers = [
     }
     const { action } = (await request.json()) as { action: PayerDecisionAction };
     const now = new Date().toISOString();
+    const fromStatus = appeal.status;
     if (action === "overturn" || action === "uphold") {
       appeal.status = action === "overturn" ? "overturned" : "upheld";
       appeal.decided_at = now;
@@ -366,6 +448,23 @@ export const handlers = [
         label: action === "overturn" ? "Overturned" : "Upheld",
         detail: appeal.payer_response,
       });
+      if (action === "overturn") {
+        // Overturn generates a remittance; it lands in ops Unposted.
+        store.remittances.unshift(
+          remittanceFromAppeal(appeal, {
+            posted: false,
+            methodSeed: store.remittances.length,
+          }),
+        );
+      }
+      audit(
+        request,
+        action === "overturn" ? "payer.overturn" : "payer.uphold",
+        "appeal",
+        appeal.appeal_id,
+        `${fromStatus} -> ${appeal.status}` +
+          (action === "overturn" ? ` ($${appeal.denied_amount})` : ""),
+      );
     } else {
       appeal.status = "payer_responded";
       appeal.payer_response =
@@ -375,8 +474,90 @@ export const handlers = [
         label: "Payer responded",
         detail: appeal.payer_response,
       });
+      audit(
+        request,
+        "payer.request_records",
+        "appeal",
+        appeal.appeal_id,
+        `${fromStatus} -> payer_responded (records requested)`,
+      );
     }
     return HttpResponse.json(appeal);
+  }),
+
+  http.post("/api/appeals/:id/escalate", async ({ params, request }) => {
+    await delay(350);
+    const id = String(params.id);
+    const appeal = store.appealCases.find((a) => a.appeal_id === id);
+    if (!appeal) {
+      return HttpResponse.json({ detail: "appeal not found" }, { status: 404 });
+    }
+    if (appeal.status !== "upheld") {
+      return HttpResponse.json(
+        { detail: "only upheld appeals can be escalated" },
+        { status: 409 },
+      );
+    }
+    if (appeal.successor_id) {
+      return HttpResponse.json(
+        { detail: "appeal already escalated" },
+        { status: 409 },
+      );
+    }
+    const nextLevel = NEXT_LEVEL[appeal.level];
+    if (!nextLevel) {
+      return HttpResponse.json(
+        { detail: "external review is terminal; no further escalation" },
+        { status: 409 },
+      );
+    }
+    const now = new Date().toISOString();
+    const upheldAt = appeal.decided_at ?? now;
+    const windowDays = deadlineDays(nextLevel, appeal.payer_name);
+    const deadline = new Date(
+      new Date(upheldAt).getTime() + windowDays * DAY,
+    )
+      .toISOString()
+      .slice(0, 10);
+    const n = store.appealCases.length + 1;
+    const successorId = `APL-${String(n).padStart(4, "0")}`;
+    const successor: AppealCase = {
+      ...structuredClone(appeal),
+      appeal_id: successorId,
+      status: "drafting",
+      level: nextLevel,
+      opened_at: upheldAt,
+      submitted_at: null,
+      decided_at: null,
+      // Fresh window runs from the uphold date at the next level's rule.
+      appeal_deadline: deadline,
+      predecessor_id: appeal.appeal_id,
+      successor_id: null,
+      payer_response: null,
+      letter_subject: `${APPEAL_LEVEL_LONG[nextLevel]} — claim ${appeal.claim_id} (CARC ${appeal.carc_code})`,
+      events: [
+        {
+          at: now,
+          label: `Created from upheld ${APPEAL_LEVEL_LONG[appeal.level].toLowerCase()} ${appeal.appeal_id}`,
+          detail: `Escalated after uphold. ${APPEAL_LEVEL_LONG[nextLevel]} filing window: ${windowDays} days from uphold (deadline ${deadline}).`,
+        },
+      ],
+    };
+    appeal.successor_id = successorId;
+    appeal.events.push({
+      at: now,
+      label: `Escalated to ${APPEAL_LEVEL_LONG[nextLevel]} ${successorId}`,
+      detail: `Successor case opened in drafting via ${SUBMISSION_CHANNEL_LABELS[successor.submission_channel]}.`,
+    });
+    store.appealCases.push(successor);
+    audit(
+      request,
+      "appeal.escalate",
+      "appeal",
+      appeal.appeal_id,
+      `upheld ${APPEAL_LEVEL_LONG[appeal.level]} -> ${APPEAL_LEVEL_LONG[nextLevel]} ${successorId} (drafting)`,
+    );
+    return HttpResponse.json(successor, { status: 201 });
   }),
 
   // ---------------------------------------------------------- payer data
@@ -384,8 +565,56 @@ export const handlers = [
   http.get("/api/payer/remittances", async ({ request }) => {
     await delay(LATENCY);
     const payer = new URL(request.url).searchParams.get("payer");
-    let rows = buildRemittances(store.appealCases);
+    let rows = [...store.remittances];
     if (payer) rows = rows.filter((r) => r.payer_name === payer);
+    rows.sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1));
+    return HttpResponse.json(rows);
+  }),
+
+  // -------------------------------------------- ops remittances + posting
+
+  http.get("/api/remittances", async () => {
+    await delay(LATENCY);
+    const rows = [...store.remittances].sort((a, b) =>
+      a.payment_date < b.payment_date ? 1 : -1,
+    );
+    return HttpResponse.json(rows);
+  }),
+
+  http.post("/api/remittances/:id/post", async ({ params, request }) => {
+    await delay(300);
+    const id = String(params.id);
+    const row = store.remittances.find((r) => r.remit_id === id);
+    if (!row) {
+      return HttpResponse.json(
+        { detail: "remittance not found" },
+        { status: 404 },
+      );
+    }
+    if (row.posted) {
+      return HttpResponse.json(
+        { detail: "remittance already posted; posting is one-way" },
+        { status: 409 },
+      );
+    }
+    row.posted = true;
+    audit(
+      request,
+      "remittance.post",
+      "remittance",
+      row.remit_id,
+      `unposted -> posted ($${row.payment_amount})`,
+    );
+    return HttpResponse.json(row);
+  }),
+
+  // ------------------------------------------------- audit (append-only)
+
+  http.get("/api/audit", async () => {
+    await delay(LATENCY);
+    const rows = [...store.audit].sort((a, b) =>
+      a.timestamp < b.timestamp ? 1 : -1,
+    );
     return HttpResponse.json(rows);
   }),
 

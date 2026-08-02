@@ -94,6 +94,30 @@ class TestEligibilityInPipeline:
         assert result.eligibility.status.value == "not_found"
         assert result.routing.route_to_human
 
+    def test_coding_failure_keeps_eligibility_in_routing_reasons(
+        self, claims_pipeline, patient_jane, interchange
+    ):
+        # Uncodable assessment + terminated coverage: reviewer must see both
+        note = (
+            "CLINIC NOTE\n"
+            "Provider: Alice Rivera, MD (NPI: 1234567893)\n"
+            "Date of Service: 2026-07-15\n\n"
+            "SUBJECTIVE:\nChief Complaint: Rare condition follow-up.\n\n"
+            "ASSESSMENT:\n1. Fictional zebra syndrome.\n\n"
+            "PLAN:\n- Established patient office visit, low complexity.\n"
+        )
+        terminated_patient = patient_jane.model_copy(update={"member_id": "W99000111"})
+        result = claims_pipeline.process_note(
+            note, terminated_patient, "CLM-2003", interchange, SUBMISSION_DATE,
+        )
+        assert result.coding.claim is None
+        assert result.routing.route_to_human
+        assert any("coding failed" in r for r in result.routing.reasons)
+        assert any("ELIGIBILITY_INACTIVE" in r for r in result.routing.reasons)
+        assert any(
+            f.rule_id == "ELIGIBILITY_INACTIVE" for f in result.hitl_item.findings
+        )
+
 
 class TestDenialsPipelineEndToEnd:
     def test_clean_era_produces_no_appeals(self, denials_pipeline):

@@ -34,11 +34,15 @@ export const PORTALS: Record<
     tagline: "RemitPath internal staff",
   },
   payer: {
-    label: "Payer Portal",
+    label: "Payer Simulator",
     base: "/payer",
-    tagline: "For insurance company reviewers",
+    tagline: "Plays the payer's role in this demo",
   },
 };
+
+/** Shown next to the Payer Simulator name wherever it appears. */
+export const PAYER_SIMULATOR_NOTE =
+  "In production, appeals are submitted to payer-owned portals (e.g. Availity), fax, or mail; this simulator plays the payer's role.";
 
 /** Fixed identity options for ops and payer; practice options come from the store. */
 export const OPS_IDENTITIES: DemoIdentity[] = [
@@ -93,4 +97,25 @@ export const IdentityContext = createContext<PortalSession | null>(null);
 /** Null outside a portal shell (landing page, signup wizard). */
 export function usePortalSession(): PortalSession | null {
   return useContext(IdentityContext);
+}
+
+// ------------------------------------------------- active session (audit)
+
+/**
+ * Module-level mirror of the mounted portal session, so the fetch wrapper
+ * can attach actor headers for the audit log without React context.
+ */
+let activeSession: { portal: PortalId; identity: DemoIdentity } | null = null;
+
+export function setActiveSession(
+  session: { portal: PortalId; identity: DemoIdentity } | null,
+): void {
+  activeSession = session;
+}
+
+export function getActiveSession(): {
+  portal: PortalId;
+  identity: DemoIdentity;
+} | null {
+  return activeSession;
 }

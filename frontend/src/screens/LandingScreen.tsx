@@ -79,7 +79,12 @@ export function LandingScreen() {
         </section>
 
         {/* Efficiency stats vs. manual baseline (live from demo store) */}
-        <section className="grid grid-cols-2 gap-px border-b border-gray-100 bg-gray-100 md:grid-cols-4">
+        <div className="flex items-center gap-1.5 pt-6 text-xs text-gray-500">
+          <span aria-hidden className="h-2 w-2 rounded-full bg-severity-info" />
+          Simulated demo data — figures read live from this site's synthetic
+          data store, not from production.
+        </div>
+        <section className="mt-3 grid grid-cols-2 gap-px border-b border-gray-100 bg-gray-100 md:grid-cols-4">
           <Stat
             value={kpis ? `${kpis.avg_turnaround_days} days` : "—"}
             label="Avg appeal turnaround"
@@ -156,9 +161,9 @@ export function LandingScreen() {
             <PortalCard
               icon={Landmark}
               to="/payer"
-              title="Payer Portal"
-              body="For insurance company reviewers: appeal inbox, decisions, and remittance history."
-              cta="Enter Payer Portal"
+              title="Payer Simulator"
+              body="Plays the payer's role in this demo: appeal inbox, decisions, and remittance history. In production, appeals go to payer-owned portals (e.g. Availity), fax, or mail."
+              cta="Enter Payer Simulator"
             />
           </div>
         </section>
@@ -167,8 +172,13 @@ export function LandingScreen() {
       <footer className="border-t border-gray-200">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 text-xs text-gray-400">
           <span>RemitPath, Inc. — a fictional company for this demo.</span>
-          <span>
-            All patients, claims, providers, and dollar amounts are synthetic.
+          <span className="flex items-center gap-4">
+            <Link to="/trust" className="text-gray-500 hover:text-ink">
+              Trust & security
+            </Link>
+            <span>
+              All patients, claims, providers, and dollar amounts are synthetic.
+            </span>
           </span>
         </div>
       </footer>
