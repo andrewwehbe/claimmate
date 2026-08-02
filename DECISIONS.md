@@ -122,3 +122,26 @@ Autonomous decisions made during the build, with rationale. Ordered by phase.
 28. **Frontend lives in `frontend/`** as a standalone Vite SPA with MSW
     mocks (the spec's `src/types/` is `frontend/src/types/`), keeping the
     Python `src/` layout untouched.
+
+## Multi-portal architecture (2026-08-02, second iteration)
+
+29. **Three access points + public landing**: `/` (marketing + portal
+    selector), `/practice` (client practices: signup wizard, dashboard,
+    integration health, claim status), `/ops` (internal RCM operations -
+    the original four screens moved here, plus client management and the
+    appeals workbench), `/payer` (insurer appeal inbox + remittances).
+    Old top-level routes redirect to `/ops/...`.
+30. **Auth is demo-grade by design**: localStorage identity per portal with
+    labeled "Demo access" entry screens. Real deployment needs actual
+    authentication (per-tenant practice logins, staff SSO, payer accounts)
+    plus server-side authorization - the portal shells are structured so a
+    real auth provider can replace `lib/identity.ts`.
+31. **All three portals share one MSW in-memory store**, so payer decisions
+    (overturn/uphold) flow back into the ops appeals view and practice
+    signups appear in ops client management - the demo shows the actual
+    information flow the product promises.
+32. **Landing-page stats are computed from the live mock store**, not
+    hardcoded copy, so marketing numbers can never contradict the demo.
+33. **Company branded as fictional "RemitPath"** (labeled fictional);
+    real insurer names appear only as payer labels; every number is
+    synthetic.
