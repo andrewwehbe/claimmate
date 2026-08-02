@@ -1,0 +1,17 @@
+CLINIC NOTE
+Provider: Alice Rivera, MD (NPI: 1234567893)
+Date of Service: 2026-07-18
+
+SUBJECTIVE:
+Chief Complaint: Sore throat and cough for 4 days.
+HPI: 34-year-old patient with sore throat, dry cough, and nasal congestion.
+Low-grade fever to 100.2 at home. No shortness of breath. No known sick
+contacts.
+
+OBJECTIVE:
+Temp 99.8, HR 84, BP 118/74. Oropharynx erythematous without exudate.
+Nasal mucosa boggy. Lungs clear to auscultation. No cervical
+lymphadenopathy.
+
+ASSESSMENT:
+1. Acute upper respiratory infection.

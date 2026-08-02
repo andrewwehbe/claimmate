@@ -1,0 +1,65 @@
+{
+  "_comment": "Local citation reference keyed by denial category. Appeal letters may only cite entries from this file - never LLM memory - to prevent fabricated regulation citations. Production: expand with payer-specific medical policies and LCD/NCD references.",
+  "medical_necessity": [
+    {
+      "source": "Social Security Act",
+      "reference": "SSA 1862(a)(1)(A), 42 U.S.C. 1395y(a)(1)(A)",
+      "summary": "Coverage extends to services that are reasonable and necessary for the diagnosis or treatment of illness or injury; documented clinical indications satisfy this standard."
+    },
+    {
+      "source": "CMS Medicare Program Integrity Manual",
+      "reference": "CMS Pub. 100-08, Ch. 3, Sec. 3.6.2.2",
+      "summary": "Medical necessity determinations must be based on the clinical documentation in the record as a whole."
+    },
+    {
+      "source": "CMS Local Coverage Determination process",
+      "reference": "42 C.F.R. 400.202; Medicare Program Integrity Manual Ch. 13",
+      "summary": "An LCD is guidance, not an absolute bar to coverage; individual clinical circumstances documented in the record must be considered."
+    }
+  ],
+  "coding_error": [
+    {
+      "source": "AMA CPT Professional Edition",
+      "reference": "CPT Coding Guidelines, Introduction",
+      "summary": "Code selection must reflect the documented service; supporting documentation for the billed code accompanies this appeal."
+    },
+    {
+      "source": "CMS NCCI Policy Manual",
+      "reference": "NCCI Policy Manual for Medicare Services, Ch. 1",
+      "summary": "Distinct procedural services are separately reportable when performed at separate sessions, sites, or organ systems and appropriately modified."
+    }
+  ],
+  "auth_missing": [
+    {
+      "source": "Consolidated Appropriations Act (No Surprises Act)",
+      "reference": "Pub. L. No. 116-260, Div. BB, Title I, Sec. 116",
+      "summary": "Continuity-of-care and transparency provisions restrict retroactive denial of authorized or emergency services."
+    },
+    {
+      "source": "Affordable Care Act",
+      "reference": "42 U.S.C. 300gg-19a(b)",
+      "summary": "Emergency services must be covered without prior authorization requirements."
+    }
+  ],
+  "timely_filing": [
+    {
+      "source": "ERISA claims procedure regulation",
+      "reference": "29 C.F.R. 2560.503-1",
+      "summary": "Plans must provide a full and fair review of denied claims, including consideration of good-cause circumstances for filing delays."
+    }
+  ],
+  "cob": [
+    {
+      "source": "Medicare Secondary Payer provisions",
+      "reference": "42 U.S.C. 1395y(b)",
+      "summary": "Payer-of-order rules govern coordination of benefits; primary payer documentation is enclosed."
+    }
+  ],
+  "other": [
+    {
+      "source": "ERISA claims procedure regulation",
+      "reference": "29 C.F.R. 2560.503-1(h)",
+      "summary": "Claimants are entitled, on appeal, to a review that takes into account all comments, documents, and records submitted."
+    }
+  ]
+}

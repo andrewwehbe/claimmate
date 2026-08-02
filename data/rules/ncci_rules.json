@@ -1,0 +1,34 @@
+{
+  "_comment": "Representative seed of real NCCI edits. Production: replace via a CmsCsvNCCIRuleProvider ingesting the full quarterly CMS PTP/MUE files (see src/rcm/rules/ncci.py docstring).",
+  "ptp_edits": [
+    {"column1": "80048", "column2": "82947", "modifier_indicator": "0", "rationale": "Glucose (82947) is a component of the Basic Metabolic Panel (80048); never separately payable."},
+    {"column1": "80053", "column2": "80048", "modifier_indicator": "0", "rationale": "BMP is a component of the Comprehensive Metabolic Panel."},
+    {"column1": "80053", "column2": "84075", "modifier_indicator": "0", "rationale": "Alkaline phosphatase is a component of the CMP."},
+    {"column1": "80061", "column2": "82465", "modifier_indicator": "0", "rationale": "Total cholesterol is a component of the lipid panel."},
+    {"column1": "80061", "column2": "84478", "modifier_indicator": "0", "rationale": "Triglycerides are a component of the lipid panel."},
+    {"column1": "97530", "column2": "97140", "modifier_indicator": "1", "rationale": "Manual therapy with therapeutic activities: payable only when performed in separate body regions/sessions (distinct-service modifier required)."},
+    {"column1": "97110", "column2": "97140", "modifier_indicator": "1", "rationale": "Manual therapy with therapeutic exercise requires a distinct-service modifier."},
+    {"column1": "93000", "column2": "93040", "modifier_indicator": "0", "rationale": "Rhythm ECG is a component of the complete 12-lead ECG."},
+    {"column1": "29881", "column2": "29877", "modifier_indicator": "0", "rationale": "Chondroplasty in the same knee compartment is bundled into meniscectomy."},
+    {"column1": "45380", "column2": "45330", "modifier_indicator": "0", "rationale": "Sigmoidoscopy is bundled into colonoscopy with biopsy."},
+    {"column1": "12001", "column2": "11000", "modifier_indicator": "1", "rationale": "Debridement with simple repair payable only for a distinct site."}
+  ],
+  "mue_limits": [
+    {"code": "36415", "max_units": 1, "rationale": "One routine venipuncture per day."},
+    {"code": "80048", "max_units": 1, "rationale": "One BMP per date of service."},
+    {"code": "82947", "max_units": 2, "rationale": "Glucose quantitative, max 2 per day."},
+    {"code": "93000", "max_units": 2, "rationale": "Complete ECG, max 2 per day."},
+    {"code": "99213", "max_units": 1, "rationale": "One established-patient E/M per day."},
+    {"code": "99214", "max_units": 1, "rationale": "One established-patient E/M per day."},
+    {"code": "97140", "max_units": 4, "rationale": "Manual therapy, 15-min units, max 4 per day."},
+    {"code": "97530", "max_units": 4, "rationale": "Therapeutic activities, 15-min units, max 4 per day."},
+    {"code": "71046", "max_units": 2, "rationale": "Chest X-ray 2 views, max 2 per day."},
+    {"code": "J0585", "max_units": 400, "rationale": "Botulinum toxin type A, units per day."}
+  ],
+  "mutually_exclusive": [
+    ["99213", "99214"],
+    ["99203", "99213"],
+    ["93000", "93010"],
+    ["80048", "80053"]
+  ]
+}

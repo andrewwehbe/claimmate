@@ -1,0 +1,14 @@
+{
+  "_comment": "Deterministic scrubber reference data. prior_auth_cpt: codes requiring prior authorization (production: per-payer list from payer portals). medical_necessity: CPT -> supported ICD-10 prefixes (production: LCD/NCD coverage tables). Codes absent from medical_necessity are not checked.",
+  "prior_auth_cpt": ["70551", "70553", "72148", "27447", "29881", "64483", "97810", "J0585"],
+  "medical_necessity": {
+    "80048": ["E11", "I10", "I12", "I13", "N18", "E87", "R73", "Z79"],
+    "82947": ["E11", "R73", "E16"],
+    "80061": ["E78", "I25", "Z13.220"],
+    "93000": ["R07", "R00", "I10", "I25", "I48", "R06", "R55"],
+    "71046": ["R05", "R06", "J18", "J44", "R07"],
+    "97140": ["M54", "M25", "M62"],
+    "97530": ["M54", "M25", "M62"],
+    "36415": ["E11", "I10", "E78", "D64", "R73", "Z79"]
+  }
+}

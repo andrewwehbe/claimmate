@@ -1,0 +1,25 @@
+PROGRESS NOTE
+Provider: Alice Rivera, MD (NPI: 1234567893)
+Date of Service: 2026-07-15
+Location: Office
+
+SUBJECTIVE:
+Chief Complaint: Follow-up of hypertension and type 2 diabetes mellitus.
+HPI: 41-year-old patient returning for a 3-month follow-up of hypertension
+and type 2 diabetes mellitus. Reports good adherence to lisinopril and
+metformin. No chest pain, no visual changes, no polyuria. Home blood
+pressure readings average 128/78.
+
+OBJECTIVE:
+BP 126/80, HR 72, BMI 27.4. Heart regular rate and rhythm. Lungs clear.
+No lower extremity edema. Monofilament exam intact.
+
+ASSESSMENT:
+1. Essential hypertension - controlled.
+2. Type 2 diabetes mellitus without complications - stable.
+
+PLAN:
+- Continue lisinopril 10 mg daily and metformin 1000 mg twice daily.
+- Basic metabolic panel today; venipuncture performed in office.
+- Established patient office visit, low complexity.
+- Return in 3 months.

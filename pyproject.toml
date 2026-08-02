@@ -1,0 +1,26 @@
+[project]
+name = "rcm-engine"
+version = "0.1.0"
+description = "Modular, HIPAA-conscious Revenue Cycle Management engine: chart extraction, autonomous coding, claim scrubbing, 837P generation, denial analysis, and appeal drafting."
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "structlog>=24.1",
+    "instructor>=1.3",
+    "openai>=1.30",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
