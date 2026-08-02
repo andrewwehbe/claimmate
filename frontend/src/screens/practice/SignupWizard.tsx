@@ -47,7 +47,7 @@ const METHODS: {
       {
         key: "vendor_app_id",
         label: "Vendor app / client ID",
-        placeholder: "remitpath-partner-app",
+        placeholder: "claimate-partner-app",
       },
       {
         key: "api_scope_note",
@@ -62,7 +62,7 @@ const METHODS: {
     note: "OAuth-secured FHIR R4 endpoint from your EHR vendor.",
     fields: [
       { key: "fhir_base_url", label: "FHIR base URL", placeholder: "https://fhir.ehr.example/r4" },
-      { key: "client_id", label: "Client ID", placeholder: "remitpath-demo" },
+      { key: "client_id", label: "Client ID", placeholder: "claimate-demo" },
     ],
   },
   {
@@ -70,7 +70,7 @@ const METHODS: {
     label: "SFTP flat-file export",
     note: "Scheduled CSV/X12 drops from your PM system to our SFTP.",
     fields: [
-      { key: "sftp_host", label: "SFTP host", placeholder: "sftp.remitpath.example" },
+      { key: "sftp_host", label: "SFTP host", placeholder: "sftp.claimate.example" },
       { key: "folder", label: "Drop folder", placeholder: "/exports/daily" },
       { key: "schedule", label: "Schedule", placeholder: "Daily at 02:00 CT" },
     ],
@@ -194,12 +194,12 @@ export function SignupWizard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="flex h-12 items-center justify-between border-b border-gray-200 bg-white px-6">
+      <header className="flex h-12 items-center justify-between border-b border-gray-200 bg-surface px-6">
         <Link to="/" className="flex items-center gap-2">
-          <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-white">
+          <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
             R
           </span>
-          <span className="text-sm font-semibold tracking-tight">RemitPath</span>
+          <span className="text-sm font-semibold tracking-tight">Claimate</span>
         </Link>
         <StatusBadge label="Demo access — no real data" tone="amber" />
       </header>
@@ -235,7 +235,7 @@ export function SignupWizard() {
           ))}
         </ol>
 
-        <div className="mt-6 border border-gray-200 bg-white p-6">
+        <div className="mt-6 border border-gray-200 bg-surface p-6">
           {step === 0 && (
             <div className="space-y-4">
               <Field label="Practice legal name">

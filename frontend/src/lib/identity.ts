@@ -31,7 +31,7 @@ export const PORTALS: Record<
   ops: {
     label: "Operations",
     base: "/ops",
-    tagline: "RemitPath internal staff",
+    tagline: "Claimate internal staff",
   },
   payer: {
     label: "Payer Simulator",
@@ -65,7 +65,7 @@ export const PAYER_IDENTITIES: DemoIdentity[] = [
   },
 ];
 
-const key = (portal: PortalId) => `remitpath-demo-identity:${portal}`;
+const key = (portal: PortalId) => `claimate-demo-identity:${portal}`;
 
 export function loadIdentity(portal: PortalId): DemoIdentity | null {
   try {

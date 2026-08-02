@@ -31,19 +31,19 @@ export function SideNav({ portalLabel, items }: Props) {
     >
       <Link
         to="/"
-        title="RemitPath — back to site"
+        title="Claimate — back to site"
         className={classNames(
           "flex h-12 items-center border-b border-gray-200",
           collapsed ? "justify-center" : "gap-2 px-4",
         )}
       >
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-white">
+        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
           R
         </span>
         {!collapsed && (
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold leading-4 tracking-tight text-ink">
-              RemitPath
+              Claimate
             </span>
             <span className="block truncate text-xs leading-4 text-gray-500">
               {portalLabel}

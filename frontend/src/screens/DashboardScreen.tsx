@@ -11,13 +11,32 @@ import {
 import { useDashboard } from "../api/queries";
 import { TopBar } from "../components/TopBar";
 import { formatMoney, formatPercent } from "../lib/format";
+import { useTheme } from "../lib/theme";
 
 const CHART_BLUE = "#2563EB";
-const GRID_GRAY = "#F4F4F5";
-const AXIS_GRAY = "#A1A1AA";
+
+/** Recharts needs concrete values, so axis/grid colors follow the theme. */
+const CHART_COLORS = {
+  light: {
+    grid: "#F4F4F5",
+    axisText: "#A1A1AA",
+    axisLine: "#E4E4E7",
+    cursor: "#D4D4D8",
+    dotStroke: "#FFFFFF",
+  },
+  dark: {
+    grid: "#1E1E22",
+    axisText: "#6E6E76",
+    axisLine: "#26262A",
+    cursor: "#3F3F46",
+    dotStroke: "#0A0A0A",
+  },
+} as const;
 
 export function DashboardScreen() {
   const { data, isLoading, isError, error } = useDashboard();
+  const { theme } = useTheme();
+  const chart = CHART_COLORS[theme];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -26,7 +45,7 @@ export function DashboardScreen() {
         {isLoading ? (
           <DashboardLoading />
         ) : isError || !data ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load metrics: {error?.message}
           </div>
         ) : (
@@ -53,7 +72,7 @@ export function DashboardScreen() {
               />
             </div>
 
-            <section className="border border-gray-200 bg-white">
+            <section className="border border-gray-200 bg-surface">
               <header className="border-b border-gray-200 px-4 py-3">
                 <h2 className="text-sm font-semibold text-ink">
                   Clean claim rate
@@ -69,7 +88,7 @@ export function DashboardScreen() {
                     margin={{ top: 8, right: 24, bottom: 4, left: 8 }}
                   >
                     <CartesianGrid
-                      stroke={GRID_GRAY}
+                      stroke={chart.grid}
                       strokeWidth={1}
                       vertical={false}
                     />
@@ -81,21 +100,21 @@ export function DashboardScreen() {
                           day: "numeric",
                         })
                       }
-                      tick={{ fontSize: 11, fill: AXIS_GRAY }}
+                      tick={{ fontSize: 11, fill: chart.axisText }}
                       tickLine={false}
-                      axisLine={{ stroke: "#E4E4E7" }}
+                      axisLine={{ stroke: chart.axisLine }}
                       tickMargin={8}
                     />
                     <YAxis
                       domain={[0.85, 1]}
                       tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
-                      tick={{ fontSize: 11, fill: AXIS_GRAY }}
+                      tick={{ fontSize: 11, fill: chart.axisText }}
                       tickLine={false}
                       axisLine={false}
                       width={40}
                     />
                     <Tooltip
-                      cursor={{ stroke: "#D4D4D8", strokeWidth: 1 }}
+                      cursor={{ stroke: chart.cursor, strokeWidth: 1 }}
                       content={<RateTooltip />}
                     />
                     <Line
@@ -107,7 +126,7 @@ export function DashboardScreen() {
                       activeDot={{
                         r: 3.5,
                         fill: CHART_BLUE,
-                        stroke: "#FFFFFF",
+                        stroke: chart.dotStroke,
                         strokeWidth: 2,
                       }}
                       isAnimationActive={false}
@@ -133,7 +152,7 @@ function StatCard({
   note?: string;
 }) {
   return (
-    <div className="border border-gray-200 bg-white p-4">
+    <div className="border border-gray-200 bg-surface p-4">
       <div className="text-xs font-medium text-gray-500">{label}</div>
       <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-ink">
         {value}
@@ -152,7 +171,7 @@ interface TooltipProps {
 function RateTooltip({ active, payload, label }: TooltipProps) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm">
+    <div className="border border-gray-200 bg-surface px-2.5 py-1.5 shadow-sm">
       <div className="text-xs text-gray-500">
         Week of{" "}
         {new Date(`${label}T00:00:00`).toLocaleDateString("en-US", {

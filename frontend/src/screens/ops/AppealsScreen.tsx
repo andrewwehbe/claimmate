@@ -153,7 +153,7 @@ export function AppealsScreen() {
       render: (a) => (
         <button
           type="button"
-          className="text-xs font-medium text-primary hover:underline"
+          className="text-xs font-medium text-accent hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             setSelectedId(a.appeal_id);
@@ -180,13 +180,13 @@ export function AppealsScreen() {
 
       <div className="min-h-0 flex-1 overflow-auto p-6">
         {isLoading ? (
-          <div className="space-y-px border border-gray-200 bg-white p-3">
+          <div className="space-y-px border border-gray-200 bg-surface p-3">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="h-8 bg-gray-100" />
             ))}
           </div>
         ) : isError ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load appeals: {error?.message}
           </div>
         ) : (
@@ -268,7 +268,7 @@ function Kpi({
   good?: boolean;
 }) {
   return (
-    <div className="bg-white px-6 py-3">
+    <div className="bg-surface px-6 py-3">
       <span className="flex items-baseline gap-2">
         <span className="font-mono text-lg font-semibold tabular-nums text-ink">
           {value}
@@ -345,7 +345,7 @@ function AppealDetail({
             Created from upheld{" "}
             <button
               type="button"
-              className="font-mono text-primary hover:underline"
+              className="font-mono text-accent hover:underline"
               onClick={() => onSelectAppeal(appeal.predecessor_id!)}
             >
               {appeal.predecessor_id}
@@ -357,7 +357,7 @@ function AppealDetail({
             Escalated to{" "}
             <button
               type="button"
-              className="font-mono text-primary hover:underline"
+              className="font-mono text-accent hover:underline"
               onClick={() => onSelectAppeal(appeal.successor_id!)}
             >
               {appeal.successor_id}
@@ -367,7 +367,7 @@ function AppealDetail({
       </div>
 
       {appeal.status === "upheld" && (
-        <div className="flex items-center gap-2 border-l-2 border-severity-warning bg-amber-50/60 p-3">
+        <div className="flex items-center gap-2 border-l-2 border-severity-warning bg-amber-50/60 p-3 dark:bg-amber-500/10">
           {canEscalate ? (
             <>
               <span className="flex-1 text-sm text-gray-700">

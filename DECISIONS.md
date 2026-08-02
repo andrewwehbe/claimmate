@@ -192,3 +192,11 @@ Autonomous decisions made during the build, with rationale. Ordered by phase.
 41. **Landing stats are labeled "Simulated demo data."** The demo's
     credibility with technical buyers depends on never blurring simulated
     and real performance.
+42. **Product renamed "Claimate"** (2026-08-02, founder decision),
+    replacing the placeholder "RemitPath" everywhere user-facing and in
+    frontend metadata. Earlier decisions referencing RemitPath are left
+    as written for historical accuracy.
+43. **Dark mode is the default theme** with a persisted light/dark toggle.
+    Same token discipline in both themes (near-black surfaces, no pure
+    white text, single blue primary, severity hues adjusted only for
+    contrast); the printable monthly report always renders light.

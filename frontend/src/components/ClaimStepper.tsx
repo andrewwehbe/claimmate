@@ -64,7 +64,7 @@ export function ClaimStepper({ status, rejection }: Props) {
                   s.state === "done" && "bg-gray-400",
                   s.state === "current" && "bg-primary",
                   s.state === "error" && "bg-severity-error",
-                  s.state === "future" && "border border-gray-300 bg-white",
+                  s.state === "future" && "border border-gray-300 bg-surface",
                 )}
               />
               <span

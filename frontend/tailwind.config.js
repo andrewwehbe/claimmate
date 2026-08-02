@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     fontFamily: {
       sans: [
@@ -37,33 +38,36 @@ export default {
     },
     extend: {
       colors: {
-        // 9-step neutral scale
+        // Themed tokens: RGB triplets defined in index.css (:root / .dark).
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        // Label color on primary-blue accents (same in both themes).
+        "on-accent": "#F5F5F5",
         gray: {
-          50: "#FAFAFA",
-          100: "#F4F4F5",
-          200: "#E4E4E7",
-          300: "#D4D4D8",
-          400: "#A1A1AA",
-          500: "#71717A",
-          600: "#52525B",
-          700: "#3F3F46",
-          900: "#18181B",
+          50: "rgb(var(--gray-50) / <alpha-value>)",
+          100: "rgb(var(--gray-100) / <alpha-value>)",
+          200: "rgb(var(--gray-200) / <alpha-value>)",
+          300: "rgb(var(--gray-300) / <alpha-value>)",
+          400: "rgb(var(--gray-400) / <alpha-value>)",
+          500: "rgb(var(--gray-500) / <alpha-value>)",
+          600: "rgb(var(--gray-600) / <alpha-value>)",
+          700: "rgb(var(--gray-700) / <alpha-value>)",
+          900: "rgb(var(--gray-900) / <alpha-value>)",
         },
-        ink: "#0A0A0A",
         primary: {
-          DEFAULT: "#2563EB",
-          hover: "#1D4ED8",
-          subtle: "#EFF6FF",
+          DEFAULT: "rgb(var(--primary) / <alpha-value>)",
+          hover: "rgb(var(--primary-hover) / <alpha-value>)",
+          subtle: "rgb(var(--primary-subtle) / <alpha-value>)",
         },
+        // Blue for TEXT (links). Lighter in dark so small text stays legible;
+        // fills/borders keep --primary (#2563EB) in both themes.
+        accent: "rgb(var(--accent) / <alpha-value>)",
         severity: {
-          error: "#DC2626",
-          warning: "#D97706",
-          info: "#6B7280",
-          pass: "#16A34A",
+          error: "rgb(var(--sev-error) / <alpha-value>)",
+          warning: "rgb(var(--sev-warning) / <alpha-value>)",
+          info: "rgb(var(--sev-info) / <alpha-value>)",
+          pass: "rgb(var(--sev-pass) / <alpha-value>)",
         },
-      },
-      spacing: {
-        // 4/8/12/16/24/32/48 map to tailwind 1/2/3/4/6/8/12 (default 4px scale)
       },
       boxShadow: {
         sm: "0 1px 2px 0 rgb(0 0 0 / 0.05)",

@@ -107,13 +107,13 @@ export function PayerInbox() {
       />
       <div className="min-h-0 flex-1 overflow-auto p-6">
         {isLoading ? (
-          <div className="space-y-px border border-gray-200 bg-white p-3">
+          <div className="space-y-px border border-gray-200 bg-surface p-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="h-8 bg-gray-100" />
             ))}
           </div>
         ) : isError ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load inbox: {error?.message}
           </div>
         ) : (
@@ -266,7 +266,7 @@ function PayerAppealDetail({
       </div>
 
       {/* Decision bar */}
-      <footer className="flex shrink-0 items-center gap-2 border-t border-gray-200 bg-white p-3">
+      <footer className="flex shrink-0 items-center gap-2 border-t border-gray-200 bg-surface p-3">
         {decided ? (
           <span className="text-xs text-gray-500">
             Decision recorded: this appeal was {appeal.status}.

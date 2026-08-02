@@ -144,7 +144,7 @@ export function QueueScreen() {
         }
       />
 
-      <div className="flex items-center gap-1 border-b border-gray-200 bg-white px-6">
+      <div className="flex items-center gap-1 border-b border-gray-200 bg-surface px-6">
         {TABS.map((t) => {
           const count = pending.filter((q) => matchesTab(q, t.id)).length;
           const active = tab === t.id;
@@ -178,7 +178,7 @@ export function QueueScreen() {
         {isLoading ? (
           <QueueLoading />
         ) : isError ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load queue: {error?.message}
           </div>
         ) : (
@@ -204,7 +204,7 @@ export function QueueScreen() {
 /** Plain muted loading blocks — no shimmer. */
 function QueueLoading() {
   return (
-    <div className="border border-gray-200 bg-white">
+    <div className="border border-gray-200 bg-surface">
       <div className="h-9 border-b border-gray-200 bg-gray-50" />
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="flex h-11 items-center gap-4 border-b border-gray-100 px-3 last:border-b-0">

@@ -1,4 +1,4 @@
-# RCM Engine
+# Claimate (rcm-engine)
 
 A modular, HIPAA-conscious Revenue Cycle Management platform in Python 3.11+.
 It processes medical charts, automates claim generation (X12 837P), predicts
@@ -141,8 +141,10 @@ replaced wholesale; the JSON shapes are documented in each file's
 
 ## Frontend
 
-`frontend/` contains the operational console (React 18 + TypeScript + Vite +
-Tailwind, MSW-mocked API). See `frontend/README.md`.
+`frontend/` contains the Claimate multi-portal app (React 18 + TypeScript +
+Vite + Tailwind, MSW-mocked API): practice portal, internal operations
+console, payer simulator, public landing + trust pages, dark mode by
+default. See `frontend/README.md` and `APP-GUIDE.md`.
 
 ## Repo map
 

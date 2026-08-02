@@ -66,7 +66,7 @@ export function PracticeReport() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen bg-surface text-ink">
       <header className="flex h-12 items-center justify-between border-b border-gray-200 px-6 print:hidden">
         <Link
           to="/practice"
@@ -91,11 +91,11 @@ export function PracticeReport() {
             <div className="flex items-baseline justify-between border-b-2 border-ink pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-white">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
                     R
                   </span>
                   <span className="text-sm font-semibold tracking-tight">
-                    RemitPath
+                    Claimate
                   </span>
                 </div>
                 <h1 className="mt-2 text-lg font-semibold tracking-tight">
@@ -134,7 +134,7 @@ export function PracticeReport() {
                 <Row label="Posted to your ledger">
                   {formatMoney(o.posted_to_ledger)}
                 </Row>
-                <Row label="Estimated RemitPath fees (period)">
+                <Row label="Estimated Claimate fees (period)">
                   {formatMoney(estimateFees(o).fee)}
                 </Row>
               </tbody>
@@ -185,13 +185,13 @@ export function PracticeReport() {
             )}
 
             <p className="mt-10 border-t border-gray-200 pt-3 text-xs text-gray-400">
-              RemitPath, Inc. (fictional, demo) · Generated{" "}
+              Claimate, Inc. (fictional, demo) · Generated{" "}
               {new Date().toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
               })}{" "}
-              · Questions: billing-support@remitpath.example
+              · Questions: billing-support@claimate.example
             </p>
           </>
         )}

@@ -82,13 +82,13 @@ export function PracticeDashboard() {
             ))}
           </div>
         ) : isError || !data ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load overview: {error?.message}
           </div>
         ) : (
           <>
             {pending && (
-              <div className="mb-6 border-l-2 border-severity-warning bg-white p-4">
+              <div className="mb-6 border-l-2 border-severity-warning bg-surface p-4">
                 <div className="text-sm font-medium text-ink">
                   Integration pending
                 </div>
@@ -98,7 +98,7 @@ export function PracticeDashboard() {
                   appear here after the first sync.{" "}
                   <Link
                     to="/practice/integration"
-                    className="font-medium text-primary hover:underline"
+                    className="font-medium text-accent hover:underline"
                   >
                     View integration status
                   </Link>
@@ -126,7 +126,7 @@ export function PracticeDashboard() {
                 value={formatMoney(data.posted_to_ledger)}
                 note="posted remittance dollars"
               />
-              <div className="border border-gray-200 bg-white p-4">
+              <div className="border border-gray-200 bg-surface p-4">
                 <div className="text-xs font-medium text-gray-500">
                   Integration sync
                 </div>
@@ -169,7 +169,7 @@ export function PracticeDashboard() {
                   description={
                     pending
                       ? "Recoveries will appear once your integration is live and denials are being worked."
-                      : "When RemitPath overturns a denial for your practice, it appears here with the recovered amount."
+                      : "When Claimate overturns a denial for your practice, it appears here with the recovered amount."
                   }
                 />
               }
@@ -191,7 +191,7 @@ function Card({
   note?: string;
 }) {
   return (
-    <div className="border border-gray-200 bg-white p-4">
+    <div className="border border-gray-200 bg-surface p-4">
       <div className="text-xs font-medium text-gray-500">{label}</div>
       <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-ink">
         {value}

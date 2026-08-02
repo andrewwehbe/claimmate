@@ -100,13 +100,13 @@ export function ClientsScreen() {
       />
       <div className="min-h-0 flex-1 overflow-auto p-6">
         {isLoading ? (
-          <div className="space-y-px border border-gray-200 bg-white p-3">
+          <div className="space-y-px border border-gray-200 bg-surface p-3">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="h-8 bg-gray-100" />
             ))}
           </div>
         ) : isError ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load clients: {error?.message}
           </div>
         ) : (
@@ -275,7 +275,7 @@ function Cell({
   mono?: boolean;
 }) {
   return (
-    <div className="bg-white p-3">
+    <div className="bg-surface p-3">
       <div className="text-xs text-gray-500">{label}</div>
       <div
         className={

@@ -120,7 +120,7 @@ export function PracticeIntegration() {
           <>
             {/* Connection status + flow */}
             <div className="mb-6 grid gap-4 lg:grid-cols-[280px_1fr]">
-              <div className="border border-gray-200 bg-white p-4">
+              <div className="border border-gray-200 bg-surface p-4">
                 <div className="text-xs font-medium text-gray-500">
                   Connection status
                 </div>
@@ -149,7 +149,7 @@ export function PracticeIntegration() {
               </div>
 
               {/* Data-flow direction diagram */}
-              <div className="flex items-center justify-center gap-3 border border-gray-200 bg-white p-4">
+              <div className="flex items-center justify-center gap-3 border border-gray-200 bg-surface p-4">
                 <FlowNode
                   icon={Database}
                   title={account.ehr_system}
@@ -158,7 +158,7 @@ export function PracticeIntegration() {
                 <FlowArrow label="charts / claims" />
                 <FlowNode
                   icon={Server}
-                  title="RemitPath connector"
+                  title="Claimate connector"
                   note={METHOD_LABELS[account.integration_method]}
                 />
                 <FlowArrow label="normalized encounters" />
@@ -197,7 +197,7 @@ export function PracticeIntegration() {
             )}
           </>
         ) : (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load integration: {overview.error?.message}
           </div>
         )}

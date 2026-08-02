@@ -36,7 +36,7 @@ export function SidePanel({
         aria-hidden
         onClick={onClose}
         className={classNames(
-          "fixed inset-0 z-30 bg-ink/20 transition-opacity duration-150",
+          "fixed inset-0 z-30 bg-black/40 transition-opacity duration-150",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
@@ -45,7 +45,7 @@ export function SidePanel({
         aria-modal="true"
         style={{ width, maxWidth: "90vw" }}
         className={classNames(
-          "fixed inset-y-0 right-0 z-40 flex flex-col border-l border-gray-200 bg-white transition-transform duration-150",
+          "fixed inset-y-0 right-0 z-40 flex flex-col border-l border-gray-200 bg-surface transition-transform duration-150",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >

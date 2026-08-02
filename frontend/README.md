@@ -1,8 +1,12 @@
-# RemitPath frontend (rcm-engine)
+# Claimate frontend (rcm-engine)
 
 Multi-portal SPA for the RCM engine: Vite + React 18 + TypeScript (strict) +
 Tailwind + TanStack Query + MSW. Runs fully standalone against an in-memory
 mock API — **no backend, no real auth, all data synthetic**.
+
+Dark mode is the default; a sun/moon toggle in the TopBar (and on the public
+landing and /trust pages) switches themes, persisted under the
+`claimate-theme` localStorage key. The printable report always prints light.
 
 ## Commands
 
@@ -68,7 +72,7 @@ their `/ops/...` equivalents.
 ## Demo identities (mock role gate)
 
 Each portal shows a "Demo access" entry screen; the choice persists in
-`localStorage` (`remitpath-demo-identity:<portal>`). Sign out from the TopBar.
+`localStorage` (`claimate-demo-identity:<portal>`). Sign out from the TopBar.
 
 - **Practice portal** — any onboarded practice, e.g. *Sunrise Family
   Medicine, S.C.* (connected), *Cedar Ridge Pediatrics* (degraded sync),
@@ -102,7 +106,15 @@ Each portal shows a "Demo access" entry screen; the choice persists in
 
 Inter for UI (13px body), JetBrains Mono for all codes/IDs/amounts; radii
 4px inputs / 6px buttons+cards / 0 tables; single blue primary `#2563EB`;
-severity ERROR `#DC2626`, WARNING `#D97706`, INFO `#6B7280`, PASS `#16A34A`
-(dots/left-borders only, never full colored backgrounds). No gradients, no
-emoji, no pill buttons, no shadows heavier than `shadow-sm`, no shimmer
-skeletons.
+severity ERROR/WARNING/INFO/PASS as dots/left-borders only, never full
+colored backgrounds. No gradients, no emoji, no pill buttons, no shadows
+heavier than `shadow-sm`, no shimmer skeletons.
+
+Theming: every surface/text/border color routes through CSS variables (RGB
+triplets in `src/index.css`, consumed via the Tailwind config as
+`rgb(var(--x) / <alpha>)`). Light values live in `:root`, dark values under
+`.dark` on `<html>` (applied pre-paint by an inline script in `index.html`).
+Dark surfaces are near-black (`#0A0A0A` base, `#111113`/`#161618` raised),
+text is near-white (`#F0F0F2`, never pure white), borders in the `#26262A`
+range; severity hues brighten slightly for contrast; primary hover lightens
+to `#3B82F6`. `@media print` forces the light values regardless of theme.

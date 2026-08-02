@@ -62,11 +62,11 @@ export function DataTable<T>({
   };
 
   if (rows.length === 0 && emptyState) {
-    return <div className="border border-gray-200 bg-white">{emptyState}</div>;
+    return <div className="border border-gray-200 bg-surface">{emptyState}</div>;
   }
 
   return (
-    <div className="overflow-auto border border-gray-200 bg-white">
+    <div className="overflow-auto border border-gray-200 bg-surface">
       <table className="w-full border-collapse text-sm">
         <thead className="sticky top-0 z-10 bg-gray-50">
           <tr className="border-b border-gray-200">

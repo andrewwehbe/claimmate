@@ -4,6 +4,7 @@ import { ArrowLeftRight, LogOut } from "lucide-react";
 
 import { PORTALS, usePortalSession } from "../lib/identity";
 import { StatusBadge } from "./StatusBadge";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface Props {
   title: string;
@@ -19,7 +20,7 @@ export function TopBar({ title, meta, actions }: Props) {
   const session = usePortalSession();
 
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-white px-6">
+    <header className="flex h-12 shrink-0 items-center justify-between gap-4 border-b border-gray-200 bg-surface px-6">
       <div className="flex min-w-0 items-baseline gap-3">
         <h1 className="whitespace-nowrap text-md font-semibold text-ink">
           {title}
@@ -28,6 +29,7 @@ export function TopBar({ title, meta, actions }: Props) {
       </div>
       <div className="flex shrink-0 items-center gap-2">
         {actions}
+        <ThemeToggle />
         {session && (
           <div className="ml-2 flex items-center gap-2 border-l border-gray-200 pl-3">
             <StatusBadge label={PORTALS[session.portal].label} tone="blue" />

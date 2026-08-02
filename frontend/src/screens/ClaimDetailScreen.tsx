@@ -46,7 +46,7 @@ export function ClaimDetailScreen() {
   if (isError || !data) {
     return (
       <div className="p-6">
-        <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+        <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
           Failed to load claim {id}: {error?.message ?? "not found"}
         </div>
       </div>
@@ -76,7 +76,7 @@ function ClaimDetail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Header */}
-      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-6">
+      <header className="flex h-12 shrink-0 items-center gap-3 border-b border-gray-200 bg-surface px-6">
         <button
           type="button"
           onClick={onBack}
@@ -108,7 +108,7 @@ function ClaimDetail({
       </header>
 
       {/* Clearinghouse lifecycle stepper */}
-      <div className="flex shrink-0 items-center border-b border-gray-200 bg-white px-6 py-2">
+      <div className="flex shrink-0 items-center border-b border-gray-200 bg-surface px-6 py-2">
         <ClaimStepper
           status={detail.lifecycle_status}
           rejection={detail.clearinghouse_rejection}
@@ -127,7 +127,7 @@ function ClaimDetail({
       </div>
 
       {/* Bottom drawer: raw 837P */}
-      <section className="shrink-0 border-t border-gray-200 bg-white">
+      <section className="shrink-0 border-t border-gray-200 bg-surface">
         <button
           type="button"
           onClick={() => setEdiOpen((o) => !o)}
@@ -144,7 +144,7 @@ function ClaimDetail({
       </section>
 
       {/* Sticky action bar */}
-      <footer className="flex h-14 shrink-0 items-center gap-2 border-t border-gray-200 bg-white px-6">
+      <footer className="flex h-14 shrink-0 items-center gap-2 border-t border-gray-200 bg-surface px-6">
         <button
           type="button"
           className="btn-primary"
@@ -201,7 +201,7 @@ function EncounterColumn({ detail }: { detail: ClaimDetailView }) {
       </div>
 
       {enc.extraction_warnings.length > 0 && (
-        <div className="mb-3 border-l-2 border-severity-warning bg-white p-2.5">
+        <div className="mb-3 border-l-2 border-severity-warning bg-surface p-2.5">
           {enc.extraction_warnings.map((w) => (
             <div key={w} className="flex items-start gap-1.5 text-xs text-gray-600">
               <SeverityDot severity="WARNING" showLabel={false} className="mt-1" />
@@ -260,7 +260,7 @@ const ELIGIBILITY_LABELS: Record<EligibilityResult["status"], string> = {
 function EligibilityBlock({ eligibility }: { eligibility: EligibilityResult }) {
   const ok = eligibility.status === "active";
   return (
-    <section className="mb-3 border border-gray-200 bg-white">
+    <section className="mb-3 border border-gray-200 bg-surface">
       <div className="flex h-8 items-center gap-1.5 border-b border-gray-100 px-2.5 text-xs font-medium text-gray-700">
         Eligibility (270/271)
         <span className="ml-auto flex items-center gap-1.5">
@@ -320,7 +320,7 @@ function SoapSection({
 }) {
   const [open, setOpen] = useState(true);
   return (
-    <section className="mb-2 border border-gray-200 bg-white">
+    <section className="mb-2 border border-gray-200 bg-surface">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -371,7 +371,7 @@ function CodedClaimColumn({
       ) : (
         <>
           <SectionLabel>Diagnoses (ICD-10-CM)</SectionLabel>
-          <div className="mb-4 border border-gray-200 bg-white">
+          <div className="mb-4 border border-gray-200 bg-surface">
             {claim.diagnoses.map((d, i) => (
               <div
                 key={d.code}
@@ -388,7 +388,7 @@ function CodedClaimColumn({
           </div>
 
           <SectionLabel>Procedures (CPT / HCPCS)</SectionLabel>
-          <div className="border border-gray-200 bg-white">
+          <div className="border border-gray-200 bg-surface">
             {claim.procedures.map((p) => (
               <div
                 key={p.code}
@@ -532,7 +532,7 @@ function CodeEditor({
         {procs.map((p, i) => (
           <div
             key={i}
-            className="space-y-2 border border-gray-200 bg-white p-2.5"
+            className="space-y-2 border border-gray-200 bg-surface p-2.5"
           >
             <div className="flex items-center gap-2">
               <input
@@ -634,7 +634,7 @@ function FindingsColumn({ detail }: { detail: ClaimDetailView }) {
     <div className="min-h-0 overflow-y-auto bg-gray-50/60 p-4">
       <ColumnTitle>Scrub Findings</ColumnTitle>
       {detail.findings.length === 0 ? (
-        <div className="flex items-center gap-2 border border-gray-200 bg-white p-3 text-sm text-gray-600">
+        <div className="flex items-center gap-2 border border-gray-200 bg-surface p-3 text-sm text-gray-600">
           <SeverityDot severity="PASS" showLabel={false} />
           All scrub rules passed.
         </div>
@@ -655,7 +655,7 @@ function FindingsColumn({ detail }: { detail: ClaimDetailView }) {
                   <div
                     key={f.rule_id + (f.procedure_code ?? "")}
                     className={classNames(
-                      "border border-l-2 border-gray-200 bg-white p-2.5",
+                      "border border-l-2 border-gray-200 bg-surface p-2.5",
                       borderFor[sev],
                     )}
                   >
@@ -762,7 +762,7 @@ function DetailLoading() {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-3 gap-px bg-gray-200 p-0">
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} className="space-y-3 bg-white p-4">
+        <div key={i} className="space-y-3 bg-surface p-4">
           <div className="h-3 w-32 bg-gray-100" />
           <div className="h-20 bg-gray-100" />
           <div className="h-20 bg-gray-100" />

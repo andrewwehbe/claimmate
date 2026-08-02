@@ -100,7 +100,7 @@ export function AuditScreen() {
       />
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-white px-6 py-2">
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-surface px-6 py-2">
         <select
           className="input h-8 text-xs"
           value={actor}
@@ -170,13 +170,13 @@ export function AuditScreen() {
 
       <div className="min-h-0 flex-1 overflow-auto p-6">
         {isLoading ? (
-          <div className="space-y-px border border-gray-200 bg-white p-3">
+          <div className="space-y-px border border-gray-200 bg-surface p-3">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="h-8 bg-gray-100" />
             ))}
           </div>
         ) : isError ? (
-          <div className="border border-gray-200 bg-white p-6 text-sm text-severity-error">
+          <div className="border border-gray-200 bg-surface p-6 text-sm text-severity-error">
             Failed to load audit log: {error?.message}
           </div>
         ) : (

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { useAppealCases, useDashboard } from "../api/queries";
+import { ThemeToggle } from "../components/ThemeToggle";
 import { formatMoney, formatPercent } from "../lib/format";
 
 /**
@@ -26,15 +27,15 @@ export function LandingScreen() {
     series && series.length > 0 ? series[series.length - 1].rate : null;
 
   return (
-    <div className="min-h-screen bg-white text-ink">
+    <div className="min-h-screen bg-surface text-ink">
       {/* Site header */}
       <header className="border-b border-gray-200">
         <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-6">
           <span className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
               R
             </span>
-            <span className="text-sm font-semibold tracking-tight">RemitPath</span>
+            <span className="text-sm font-semibold tracking-tight">Claimate</span>
           </span>
           <nav className="flex items-center gap-4 text-xs text-gray-500">
             <a href="#portals" className="transition-colors hover:text-ink">
@@ -46,6 +47,7 @@ export function LandingScreen() {
             <Link to="/practice/signup" className="btn-primary h-8 px-3 text-xs">
               Get started
             </Link>
+            <ThemeToggle />
           </nav>
         </div>
       </header>
@@ -62,7 +64,7 @@ export function LandingScreen() {
             At software speed, at software cost.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-6 text-gray-600">
-            RemitPath plugs into your EHR, scrubs and submits your claims, and —
+            Claimate plugs into your EHR, scrubs and submits your claims, and —
             when payers deny — drafts, files, and tracks appeals automatically.
             Every letter cites real coverage authority; every case is a
             structured record, not a fax in a folder.
@@ -171,7 +173,7 @@ export function LandingScreen() {
 
       <footer className="border-t border-gray-200">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 text-xs text-gray-400">
-          <span>RemitPath, Inc. — a fictional company for this demo.</span>
+          <span>Claimate, Inc. — a fictional company for this demo.</span>
           <span className="flex items-center gap-4">
             <Link to="/trust" className="text-gray-500 hover:text-ink">
               Trust & security
@@ -196,7 +198,7 @@ function Stat({
   note: string;
 }) {
   return (
-    <div className="bg-white p-6">
+    <div className="bg-surface p-6">
       <div className="font-mono text-xl font-semibold tabular-nums">{value}</div>
       <div className="mt-1 text-sm font-medium text-gray-700">{label}</div>
       <div className="mt-0.5 text-xs text-gray-500">{note}</div>
@@ -248,7 +250,7 @@ function PortalCard({
       <Icon size={16} className="mb-3 text-gray-500" />
       <h3 className="text-sm font-semibold">{title}</h3>
       <p className="mt-1 flex-1 text-sm leading-5 text-gray-600">{body}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-primary">
+      <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-accent">
         {cta}
         <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
       </span>
