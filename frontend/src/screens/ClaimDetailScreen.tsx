@@ -50,7 +50,7 @@ export function ClaimDetailScreen() {
     );
   }
 
-  return <ClaimDetail detail={data} onBack={() => navigate("/queue")} />;
+  return <ClaimDetail detail={data} onBack={() => navigate("/ops/queue")} />;
 }
 
 function ClaimDetail({

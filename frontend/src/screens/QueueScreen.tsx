@@ -176,7 +176,7 @@ export function QueueScreen() {
             columns={columns}
             rows={rows}
             rowKey={(r) => r.item_id}
-            onRowClick={(r) => navigate(`/claims/${r.claim_id}`)}
+            onRowClick={(r) => navigate(`/ops/claims/${r.claim_id}`)}
             emptyState={
               <EmptyState
                 icon={CheckCircle2}

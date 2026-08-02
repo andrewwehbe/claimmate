@@ -160,7 +160,7 @@ const PATIENTS = {
 const PROVIDERS = {
   chen: { name: "Dr. Sarah Chen, MD", npi: "1234567893" },
   webb: { name: "Dr. Marcus Webb, DO", npi: "1245319599" },
-  osei: { name: "Dr. Abena Osei, MD", npi: "1093812345" },
+  osei: { name: "Dr. Abena Osei, MD", npi: "1093812349" },
 };
 
 // ---------------------------------------------------------------- claims

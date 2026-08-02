@@ -7,13 +7,22 @@ import {
 } from "@tanstack/react-query";
 
 import type {
+  AppealCase,
   AppealLetter,
+  AppealsResponse,
   AppealView,
   ClaimDetailView,
   DashboardMetrics,
   DenialRecordView,
+  PayerDecisionAction,
+  PracticeAccount,
+  PracticeClaimRow,
+  PracticeOverview,
+  PracticeSignupBody,
   QueueItemView,
+  RemittanceRow,
   ReviewStatus,
+  SyncRun,
   UpdateCodesBody,
 } from "../types";
 import { api } from "./client";
@@ -24,6 +33,12 @@ export const queryKeys = {
   denials: ["denials"] as const,
   appeal: (id: string) => ["denials", id, "appeal"] as const,
   dashboard: ["dashboard"] as const,
+  practices: ["practices"] as const,
+  practiceOverview: (id: string) => ["practices", id, "overview"] as const,
+  practiceSyncs: (id: string) => ["practices", id, "syncs"] as const,
+  practiceClaims: (id: string) => ["practices", id, "claims"] as const,
+  appeals: ["appeals"] as const,
+  remittances: (payer: string | null) => ["remittances", payer] as const,
 };
 
 // ------------------------------------------------------------- queries
@@ -62,6 +77,54 @@ export function useDashboard() {
   return useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: () => api<DashboardMetrics>("/api/dashboard"),
+  });
+}
+
+export function usePractices() {
+  return useQuery({
+    queryKey: queryKeys.practices,
+    queryFn: () => api<PracticeAccount[]>("/api/practices"),
+  });
+}
+
+export function usePracticeOverview(practiceId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.practiceOverview(practiceId ?? ""),
+    queryFn: () =>
+      api<PracticeOverview>(`/api/practices/${practiceId}/overview`),
+    enabled: Boolean(practiceId),
+  });
+}
+
+export function usePracticeSyncs(practiceId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.practiceSyncs(practiceId ?? ""),
+    queryFn: () => api<SyncRun[]>(`/api/practices/${practiceId}/syncs`),
+    enabled: Boolean(practiceId),
+  });
+}
+
+export function usePracticeClaims(practiceId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.practiceClaims(practiceId ?? ""),
+    queryFn: () =>
+      api<PracticeClaimRow[]>(`/api/practices/${practiceId}/claims`),
+    enabled: Boolean(practiceId),
+  });
+}
+
+export function useAppealCases() {
+  return useQuery({
+    queryKey: queryKeys.appeals,
+    queryFn: () => api<AppealsResponse>("/api/appeals"),
+  });
+}
+
+export function useRemittances(payerName: string | null) {
+  const qs = payerName ? `?payer=${encodeURIComponent(payerName)}` : "";
+  return useQuery({
+    queryKey: queryKeys.remittances(payerName),
+    queryFn: () => api<RemittanceRow[]>(`/api/payer/remittances${qs}`),
   });
 }
 
@@ -134,6 +197,89 @@ export function useRegenerateAppeal(denialId: string) {
     onSuccess: (view) => {
       qc.setQueryData(queryKeys.appeal(denialId), view);
       void qc.invalidateQueries({ queryKey: queryKeys.denials });
+    },
+  });
+}
+
+export function useSignupPractice() {
+  const qc = useQueryClient();
+  return useMutation<PracticeAccount, Error, PracticeSignupBody>({
+    mutationFn: (body) =>
+      api<PracticeAccount>("/api/practices/signup", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.practices });
+    },
+  });
+}
+
+export function useRunSync(practiceId: string) {
+  const qc = useQueryClient();
+  return useMutation<SyncRun, Error, void>({
+    mutationFn: () =>
+      api<SyncRun>(`/api/practices/${practiceId}/syncs/run`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.practiceSyncs(practiceId) });
+      void qc.invalidateQueries({
+        queryKey: queryKeys.practiceOverview(practiceId),
+      });
+    },
+  });
+}
+
+interface DecisionContext {
+  previous: AppealsResponse | undefined;
+}
+
+/** Payer decision with optimistic status update in the shared appeals cache. */
+export function useAppealDecision() {
+  const qc = useQueryClient();
+  return useMutation<
+    AppealCase,
+    Error,
+    { appealId: string; action: PayerDecisionAction },
+    DecisionContext
+  >({
+    mutationFn: ({ appealId, action }) =>
+      api<AppealCase>(`/api/appeals/${appealId}/decision`, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      }),
+    onMutate: async ({ appealId, action }) => {
+      await qc.cancelQueries({ queryKey: queryKeys.appeals });
+      const previous = qc.getQueryData<AppealsResponse>(queryKeys.appeals);
+      qc.setQueryData<AppealsResponse>(queryKeys.appeals, (data) =>
+        data
+          ? {
+              ...data,
+              appeals: data.appeals.map((a) =>
+                a.appeal_id === appealId
+                  ? {
+                      ...a,
+                      status:
+                        action === "overturn"
+                          ? "overturned"
+                          : action === "uphold"
+                            ? "upheld"
+                            : "payer_responded",
+                    }
+                  : a,
+              ),
+            }
+          : data,
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(queryKeys.appeals, ctx.previous);
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.appeals });
+      void qc.invalidateQueries({ queryKey: ["remittances"] });
     },
   });
 }

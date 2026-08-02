@@ -7,3 +7,4 @@ export * from "./era";
 export * from "./appeal";
 export * from "./hitl";
 export * from "./api";
+export * from "./portal";

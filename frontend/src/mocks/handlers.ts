@@ -7,12 +7,20 @@
 import { delay, http, HttpResponse } from "msw";
 
 import type {
+  AppealCase,
+  AppealsKpis,
+  AppealsResponse,
   AppealView,
   ClaimDetailView,
   DashboardMetrics,
   DenialRecordView,
+  PayerDecisionAction,
+  PracticeAccount,
+  PracticeOverview,
+  PracticeSignupBody,
   QueueItemView,
   ReviewStatus,
+  SyncRun,
   UpdateCodesBody,
 } from "../types";
 import {
@@ -21,6 +29,13 @@ import {
   DENIAL_SEEDS,
   generateAppealLetter,
 } from "./seed";
+import {
+  APPEAL_SEEDS,
+  buildRemittances,
+  PRACTICE_SEEDS,
+  practiceClaims,
+  SYNC_RUN_SEEDS,
+} from "./seedPortal";
 
 // ------------------------------------------------------------- store
 
@@ -29,6 +44,9 @@ interface Store {
   claims: Map<string, ClaimDetailView>;
   denials: Record<string, DenialRecordView>;
   appealVersions: Record<string, number>;
+  practices: PracticeAccount[];
+  syncRuns: SyncRun[];
+  appealCases: AppealCase[];
 }
 
 const store: Store = {
@@ -40,7 +58,44 @@ const store: Store = {
   ),
   denials: structuredClone(DENIAL_SEEDS),
   appealVersions: {},
+  practices: structuredClone(PRACTICE_SEEDS),
+  syncRuns: structuredClone(SYNC_RUN_SEEDS),
+  appealCases: structuredClone(APPEAL_SEEDS),
 };
+
+const DAY = 86_400_000;
+
+function computeAppealsKpis(appeals: AppealCase[]): AppealsKpis {
+  const decided = appeals.filter(
+    (a) => a.decided_at !== null && a.submitted_at !== null,
+  );
+  const overturned = decided.filter((a) => a.status === "overturned");
+  const avgDays =
+    decided.length === 0
+      ? 0
+      : decided.reduce(
+          (s, a) =>
+            s +
+            (new Date(a.decided_at!).getTime() -
+              new Date(a.submitted_at!).getTime()) /
+              DAY,
+          0,
+        ) / decided.length;
+  const recovered = overturned.reduce(
+    (s, a) => s + Number(a.denied_amount),
+    0,
+  );
+  const fte = 0.35;
+  return {
+    avg_turnaround_days: Math.round(avgDays * 10) / 10,
+    manual_baseline_days: 14,
+    overturn_rate: decided.length === 0 ? 0 : overturned.length / decided.length,
+    decided_count: decided.length,
+    recovered_total: recovered.toFixed(2),
+    fte_equivalent: fte,
+    recovered_per_fte: (recovered / fte).toFixed(2),
+  };
+}
 
 function setReviewStatus(claimId: string, status: ReviewStatus) {
   const detail = store.claims.get(claimId);
@@ -154,6 +209,184 @@ export const handlers = [
       appeal_status: rec.appeal_status,
     };
     return HttpResponse.json(view);
+  }),
+
+  // ------------------------------------------------- practices (portal)
+
+  http.get("/api/practices", async () => {
+    await delay(LATENCY);
+    return HttpResponse.json(store.practices);
+  }),
+
+  http.post("/api/practices/signup", async ({ request }) => {
+    await delay(400);
+    const body = (await request.json()) as PracticeSignupBody;
+    const n = store.practices.length + 1;
+    const account: PracticeAccount = {
+      practice_id: `PRAC-${String(n).padStart(3, "0")}`,
+      legal_name: body.legal_name,
+      specialty: body.specialty,
+      providers_count: body.providers_count,
+      state: body.state,
+      group_npi: body.group_npi,
+      ehr_system: body.ehr_system,
+      integration_method: body.integration_method,
+      integration_status: "pending",
+      plan: body.plan,
+      contact_name: body.contact_name,
+      contact_email: body.contact_email,
+      created_at: new Date().toISOString(),
+      last_sync_at: null,
+      claims_per_month: 0,
+      denial_rate: 0,
+      recovered_this_quarter: "0.00",
+    };
+    store.practices.push(account);
+    return HttpResponse.json(account, { status: 201 });
+  }),
+
+  http.get("/api/practices/:id/overview", async ({ params }) => {
+    await delay(LATENCY);
+    const id = String(params.id);
+    const account = store.practices.find((p) => p.practice_id === id);
+    if (!account) {
+      return HttpResponse.json({ detail: "practice not found" }, { status: 404 });
+    }
+    const runs = store.syncRuns
+      .filter((r) => r.practice_id === id)
+      .sort((a, b) => (a.started_at < b.started_at ? 1 : -1));
+    const recovered = store.appealCases
+      .filter((a) => a.practice_id === id && a.status === "overturned")
+      .map((a) => ({
+        appeal_id: a.appeal_id,
+        claim_id: a.claim_id,
+        carc_code: a.carc_code,
+        payer_name: a.payer_name,
+        recovered_amount: a.denied_amount,
+        decided_at: a.decided_at!,
+      }));
+    const overview: PracticeOverview = {
+      account,
+      last_sync: runs[0] ?? null,
+      claims_this_month: account.claims_per_month,
+      denial_rate: account.denial_rate,
+      recovered_this_quarter: recovered
+        .reduce((s, r) => s + Number(r.recovered_amount), 0)
+        .toFixed(2),
+      recovered_denials: recovered,
+    };
+    return HttpResponse.json(overview);
+  }),
+
+  http.get("/api/practices/:id/syncs", async ({ params }) => {
+    await delay(LATENCY);
+    const runs = store.syncRuns
+      .filter((r) => r.practice_id === String(params.id))
+      .sort((a, b) => (a.started_at < b.started_at ? 1 : -1));
+    return HttpResponse.json(runs);
+  }),
+
+  http.post("/api/practices/:id/syncs/run", async ({ params }) => {
+    await delay(900); // simulated sync run
+    const id = String(params.id);
+    const account = store.practices.find((p) => p.practice_id === id);
+    if (!account) {
+      return HttpResponse.json({ detail: "practice not found" }, { status: 404 });
+    }
+    const healthy = account.integration_status === "connected";
+    const run: SyncRun = {
+      run_id: `SYNC-${id.slice(-3)}-${String(
+        store.syncRuns.filter((r) => r.practice_id === id).length + 1,
+      ).padStart(3, "0")}`,
+      practice_id: id,
+      started_at: new Date(Date.now() - 60_000).toISOString(),
+      finished_at: new Date().toISOString(),
+      status: healthy ? "success" : account.integration_status === "error" ? "failed" : "partial",
+      rows_imported: healthy ? 143 : account.integration_status === "error" ? 0 : 88,
+      rows_failed: healthy ? 0 : account.integration_status === "error" ? 0 : 12,
+      error_message:
+        account.integration_status === "error"
+          ? "Connection failed: credentials rejected by practice server."
+          : account.integration_status === "degraded"
+            ? "12 rows rejected: malformed service-date format."
+            : null,
+    };
+    store.syncRuns.push(run);
+    if (run.status !== "failed") account.last_sync_at = run.finished_at;
+    return HttpResponse.json(run, { status: 201 });
+  }),
+
+  http.get("/api/practices/:id/claims", async ({ params }) => {
+    await delay(LATENCY);
+    const id = String(params.id);
+    const account = store.practices.find((p) => p.practice_id === id);
+    if (!account) {
+      return HttpResponse.json({ detail: "practice not found" }, { status: 404 });
+    }
+    // Pending integrations have no imported claims yet.
+    const rows = account.integration_status === "pending" ? [] : practiceClaims(id);
+    return HttpResponse.json(rows);
+  }),
+
+  // -------------------------------------------------- appeals workbench
+
+  http.get("/api/appeals", async () => {
+    await delay(LATENCY);
+    const response: AppealsResponse = {
+      kpis: computeAppealsKpis(store.appealCases),
+      appeals: store.appealCases,
+    };
+    return HttpResponse.json(response);
+  }),
+
+  http.post("/api/appeals/:id/decision", async ({ params, request }) => {
+    await delay(350);
+    const id = String(params.id);
+    const appeal = store.appealCases.find((a) => a.appeal_id === id);
+    if (!appeal) {
+      return HttpResponse.json({ detail: "appeal not found" }, { status: 404 });
+    }
+    if (appeal.status === "overturned" || appeal.status === "upheld") {
+      return HttpResponse.json(
+        { detail: "appeal already decided" },
+        { status: 409 },
+      );
+    }
+    const { action } = (await request.json()) as { action: PayerDecisionAction };
+    const now = new Date().toISOString();
+    if (action === "overturn" || action === "uphold") {
+      appeal.status = action === "overturn" ? "overturned" : "upheld";
+      appeal.decided_at = now;
+      appeal.payer_response =
+        action === "overturn"
+          ? "Determination reversed on appeal. Payment to follow on next remittance cycle."
+          : "Original determination upheld. Denial reasons stand as issued.";
+      appeal.events.push({
+        at: now,
+        label: action === "overturn" ? "Overturned" : "Upheld",
+        detail: appeal.payer_response,
+      });
+    } else {
+      appeal.status = "payer_responded";
+      appeal.payer_response =
+        "Additional medical records requested before reconsideration.";
+      appeal.events.push({
+        at: now,
+        label: "Payer responded",
+        detail: appeal.payer_response,
+      });
+    }
+    return HttpResponse.json(appeal);
+  }),
+
+  // ---------------------------------------------------------- payer data
+
+  http.get("/api/payer/remittances", async ({ request }) => {
+    await delay(LATENCY);
+    const payer = new URL(request.url).searchParams.get("payer");
+    let rows = buildRemittances(store.appealCases);
+    if (payer) rows = rows.filter((r) => r.payer_name === payer);
+    return HttpResponse.json(rows);
   }),
 
   http.get("/api/dashboard", async () => {

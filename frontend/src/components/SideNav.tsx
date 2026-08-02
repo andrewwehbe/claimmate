@@ -1,23 +1,25 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import {
-  Activity,
-  FileWarning,
-  Inbox,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from "lucide-react";
+import { Link, NavLink } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import { classNames } from "../lib/format";
 
-const NAV_ITEMS = [
-  { to: "/queue", label: "Review Queue", icon: Inbox },
-  { to: "/denials", label: "Denials & Appeals", icon: FileWarning },
-  { to: "/dashboard", label: "Dashboard", icon: Activity },
-];
+export interface NavItem {
+  to: string;
+  label: string;
+  icon: LucideIcon;
+  /** Match exactly (for index routes like /practice). */
+  end?: boolean;
+}
 
-/** Collapsible left navigation: icons + labels, near-black surface. */
-export function SideNav() {
+interface Props {
+  portalLabel: string;
+  items: NavItem[];
+}
+
+/** Collapsible left navigation: icons + labels, quiet near-white surface. */
+export function SideNav({ portalLabel, items }: Props) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -27,7 +29,9 @@ export function SideNav() {
         collapsed ? "w-12" : "w-52",
       )}
     >
-      <div
+      <Link
+        to="/"
+        title="RemitPath — back to site"
         className={classNames(
           "flex h-12 items-center border-b border-gray-200",
           collapsed ? "justify-center" : "gap-2 px-4",
@@ -37,17 +41,23 @@ export function SideNav() {
           R
         </span>
         {!collapsed && (
-          <span className="text-sm font-semibold tracking-tight text-ink">
-            RCM Console
+          <span className="min-w-0">
+            <span className="block truncate text-sm font-semibold leading-4 tracking-tight text-ink">
+              RemitPath
+            </span>
+            <span className="block truncate text-xs leading-4 text-gray-500">
+              {portalLabel}
+            </span>
           </span>
         )}
-      </div>
+      </Link>
 
       <div className="flex flex-1 flex-col gap-0.5 p-2">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {items.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end}
             title={label}
             className={({ isActive }) =>
               classNames(
