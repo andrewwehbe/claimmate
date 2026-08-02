@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { House, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 import { classNames } from "../lib/format";
 
@@ -31,19 +31,18 @@ export function SideNav({ portalLabel, items }: Props) {
     >
       <Link
         to="/"
-        title="Claimate — back to site"
+        title="ClaimMate — back to site"
         className={classNames(
           "flex h-12 items-center border-b border-gray-200",
-          collapsed ? "justify-center" : "gap-2 px-4",
+          collapsed ? "justify-center" : "px-4",
         )}
       >
-        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
-          R
-        </span>
-        {!collapsed && (
+        {collapsed ? (
+          <House size={15} className="shrink-0 text-gray-500" />
+        ) : (
           <span className="min-w-0">
             <span className="block truncate text-sm font-semibold leading-4 tracking-tight text-ink">
-              Claimate
+              ClaimMate
             </span>
             <span className="block truncate text-xs leading-4 text-gray-500">
               {portalLabel}

@@ -31,7 +31,7 @@ export const PORTALS: Record<
   ops: {
     label: "Operations",
     base: "/ops",
-    tagline: "Claimate internal staff",
+    tagline: "ClaimMate internal staff",
   },
   payer: {
     label: "Payer Simulator",

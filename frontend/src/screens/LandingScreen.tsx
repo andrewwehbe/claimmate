@@ -1,21 +1,15 @@
 import { Link } from "react-router-dom";
+import { ArrowRight, FileSearch, Gavel, PlugZap } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import {
-  ArrowRight,
-  Building2,
-  FileSearch,
-  Gavel,
-  Landmark,
-  PlugZap,
-} from "lucide-react";
 
 import { useAppealCases, useDashboard } from "../api/queries";
-import { ThemeToggle } from "../components/ThemeToggle";
-import { formatMoney, formatPercent } from "../lib/format";
+import { formatPercent } from "../lib/format";
+import { ClaimFlowDiagram } from "./marketing/ClaimFlowDiagram";
 
 /**
- * Public landing + access point selector. Stats are read live from the demo
- * store so marketing numbers always match what the portals show.
+ * Public homepage. Speaks only to medical practices: hero, claim-flow story,
+ * proof stats, and links out to /how-it-works and /trust. Rendered inside
+ * MarketingLayout (header/nav/footer live there).
  */
 export function LandingScreen() {
   const appeals = useAppealCases();
@@ -27,233 +21,164 @@ export function LandingScreen() {
     series && series.length > 0 ? series[series.length - 1].rate : null;
 
   return (
-    <div className="min-h-screen bg-surface text-ink">
-      {/* Site header */}
-      <header className="border-b border-gray-200">
-        <div className="mx-auto flex h-12 max-w-5xl items-center justify-between px-6">
-          <span className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
-              R
-            </span>
-            <span className="text-sm font-semibold tracking-tight">Claimate</span>
-          </span>
-          <nav className="flex items-center gap-4 text-xs text-gray-500">
-            <a href="#portals" className="transition-colors hover:text-ink">
-              Portals
-            </a>
-            <a href="#how" className="transition-colors hover:text-ink">
-              How it works
-            </a>
-            <Link to="/practice/signup" className="btn-primary h-8 px-3 text-xs">
-              Get started
-            </Link>
-            <ThemeToggle />
-          </nav>
+    <>
+      {/* Hero */}
+      <section className="mx-auto w-full max-w-[1360px] px-5 pb-20 pt-16 sm:pt-24 lg:px-10 lg:pb-28 lg:pt-32">
+        <p className="text-sm font-medium uppercase tracking-wide text-gray-500">
+          Revenue cycle automation for private practices
+        </p>
+        <h1 className="mt-5 max-w-4xl text-[40px] font-semibold leading-[1.08] tracking-tight sm:text-[56px] lg:text-[68px]">
+          Your claims, paid.
+          <br />
+          Your denials, fought.
+        </h1>
+        <p className="mt-6 max-w-2xl text-[17px] leading-7 text-gray-600 sm:text-[19px] sm:leading-8">
+          ClaimMate plugs into the EHR you already use, codes and scrubs every
+          encounter, and submits clean claims the same day. When a payer says
+          no, it appeals — automatically, with cited authority — and tracks
+          every case to a decision.
+        </p>
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Link to="/practice/signup" className="btn-marketing-primary">
+            Get started
+            <ArrowRight size={18} />
+          </Link>
+          <Link to="/practice" className="btn-marketing-secondary">
+            Practice sign in
+          </Link>
         </div>
-      </header>
+        <p className="mt-6 text-sm text-gray-400">
+          Built for small and medium US practices. No new software for your
+          front desk to learn.
+        </p>
+      </section>
 
-      <main className="mx-auto max-w-5xl px-6">
-        {/* Hero */}
-        <section className="border-b border-gray-100 py-16">
-          <p className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">
-            Revenue cycle automation for small and medium US private practices
-          </p>
-          <h1 className="max-w-2xl text-xl font-semibold leading-8 tracking-tight">
-            Denials worked like your best billing team.
-            <br />
-            At software speed, at software cost.
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-6 text-gray-600">
-            Claimate plugs into your EHR, scrubs and submits your claims, and —
-            when payers deny — drafts, files, and tracks appeals automatically.
-            Every letter cites real coverage authority; every case is a
-            structured record, not a fax in a folder.
-          </p>
-          <div className="mt-6 flex items-center gap-3">
-            <Link to="/practice/signup" className="btn-primary">
-              Get started
-              <ArrowRight size={14} />
-            </Link>
-            <a href="#portals" className="btn-secondary">
-              Choose your portal
-            </a>
-          </div>
-        </section>
-
-        {/* Efficiency stats vs. manual baseline (live from demo store) */}
-        <div className="flex items-center gap-1.5 pt-6 text-xs text-gray-500">
-          <span aria-hidden className="h-2 w-2 rounded-full bg-severity-info" />
-          Simulated demo data — figures read live from this site's synthetic
-          data store, not from production.
-        </div>
-        <section className="mt-3 grid grid-cols-2 gap-px border-b border-gray-100 bg-gray-100 md:grid-cols-4">
-          <Stat
-            value={kpis ? `${kpis.avg_turnaround_days} days` : "—"}
-            label="Avg appeal turnaround"
-            note={`vs. ${kpis?.manual_baseline_days ?? 14}-day manual-biller baseline`}
-          />
-          <Stat
-            value={kpis ? formatPercent(kpis.overturn_rate, 0) : "—"}
-            label="Appeal overturn rate"
-            note={`across ${kpis?.decided_count ?? 0} decided appeals`}
-          />
-          <Stat
-            value={cleanClaim !== null ? formatPercent(cleanClaim) : "—"}
-            label="Clean-claim rate"
-            note="accepted on first submission"
-          />
-          <Stat
-            value={kpis ? formatMoney(kpis.recovered_per_fte) : "—"}
-            label="Recovered per FTE-equivalent"
-            note={`at ${kpis?.fte_equivalent ?? 0.35} FTE of reviewer time`}
-          />
-        </section>
-
-        {/* How it works */}
-        <section id="how" className="border-b border-gray-100 py-12">
-          <h2 className="mb-6 text-lg font-semibold tracking-tight">
-            How it works
+      {/* Claim-flow story */}
+      <section className="border-y border-gray-100 bg-gray-50/60">
+        <div className="mx-auto w-full max-w-[1360px] px-5 py-16 lg:px-10 lg:py-24">
+          <h2 className="max-w-2xl text-[28px] font-semibold leading-9 tracking-tight sm:text-[36px] sm:leading-[44px]">
+            One system carries every claim from chart to cash.
           </h2>
-          <div className="grid gap-6 md:grid-cols-3">
-            <Step
+          <div className="mt-10 rounded-xl border border-gray-200 bg-surface p-4 sm:p-8">
+            <ClaimFlowDiagram />
+          </div>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            <ValueCard
               icon={PlugZap}
-              n="01"
-              title="Connect your system"
-              body="Direct database, FHIR API, or SFTP flat-file export from Epic, athenahealth, eClinicalWorks, Tebra, DrChrono, AdvancedMD, and more. Charts flow in on a schedule you control."
+              title="Connects to your EHR"
+              body="Vendor API, FHIR, or a nightly file drop — charts flow in on their own. Epic, athenahealth, eClinicalWorks, Tebra, DrChrono, AdvancedMD, and more."
             />
-            <Step
+            <ValueCard
               icon={FileSearch}
-              n="02"
-              title="Scrub and submit"
-              body="Notes are coded, scrubbed against NCCI and payer rules, and routed: clean claims go straight out; anything uncertain goes to a human reviewer first."
+              title="Clean claims, first pass"
+              body="Every encounter is coded, checked against NCCI and payer rules, and eligibility-verified before it leaves. Anything uncertain goes to a certified coder first."
             />
-            <Step
+            <ValueCard
               icon={Gavel}
-              n="03"
-              title="Appeal and recover"
-              body="Denials are classified by CARC/RARC, matched to appealable categories, and appealed with cited authority — then tracked to a payer decision."
+              title="Denials that fight back"
+              body="Denials are classified the moment the 835 lands, and appealable ones get a letter with real coverage citations — filed, tracked, and escalated to a decision."
             />
           </div>
-        </section>
-
-        {/* Access points */}
-        <section id="portals" className="py-12">
-          <h2 className="mb-1 text-lg font-semibold tracking-tight">
-            Sign in to your portal
-          </h2>
-          <p className="mb-6 text-sm text-gray-500">
-            Demo environment — all data is synthetic. Each portal uses seeded
-            demo identities.
-          </p>
-          <div className="grid gap-4 md:grid-cols-3">
-            <PortalCard
-              icon={Building2}
-              to="/practice"
-              title="Practice Portal"
-              body="For medical practices: claim status, recovered revenue, and integration health."
-              cta="Enter Practice Portal"
-            />
-            <PortalCard
-              icon={Gavel}
-              to="/ops"
-              title="Operations"
-              body="Internal staff: review queue, appeals workbench, denials, and client management."
-              cta="Enter Operations"
-            />
-            <PortalCard
-              icon={Landmark}
-              to="/payer"
-              title="Payer Simulator"
-              body="Plays the payer's role in this demo: appeal inbox, decisions, and remittance history. In production, appeals go to payer-owned portals (e.g. Availity), fax, or mail."
-              cta="Enter Payer Simulator"
-            />
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-gray-200">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-6 py-6 text-xs text-gray-400">
-          <span>Claimate, Inc. — a fictional company for this demo.</span>
-          <span className="flex items-center gap-4">
-            <Link to="/trust" className="text-gray-500 hover:text-ink">
-              Trust & security
-            </Link>
-            <span>
-              All patients, claims, providers, and dollar amounts are synthetic.
-            </span>
-          </span>
         </div>
-      </footer>
+      </section>
+
+      {/* Proof stats + links out */}
+      <section className="mx-auto w-full max-w-[1360px] px-5 py-16 lg:px-10 lg:py-24">
+        <div className="grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+            <BigStat
+              value={kpis ? `${kpis.avg_turnaround_days}` : "—"}
+              unit="days"
+              label="average appeal turnaround"
+              note={`vs. a ${kpis?.manual_baseline_days ?? 14}-day manual baseline`}
+            />
+            <BigStat
+              value={kpis ? formatPercent(kpis.overturn_rate, 0) : "—"}
+              label="of decided appeals overturned"
+              note="denied dollars back on remittances"
+            />
+            <BigStat
+              value={cleanClaim !== null ? formatPercent(cleanClaim) : "—"}
+              label="clean-claim rate"
+              note="accepted on first submission"
+            />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center gap-1.5 text-base font-medium text-primary hover:underline"
+            >
+              See how it works
+              <ArrowRight size={16} />
+            </Link>
+            <Link
+              to="/trust"
+              className="inline-flex items-center gap-1.5 text-base font-medium text-gray-500 hover:text-ink"
+            >
+              Trust & compliance
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="border-t border-gray-100">
+        <div className="mx-auto flex w-full max-w-[1360px] flex-col items-start gap-6 px-5 py-16 lg:flex-row lg:items-center lg:justify-between lg:px-10 lg:py-20">
+          <h2 className="max-w-xl text-[28px] font-semibold leading-9 tracking-tight sm:text-[34px] sm:leading-[42px]">
+            Five minutes to sign up. Weeks of billing work back every month.
+          </h2>
+          <Link to="/practice/signup" className="btn-marketing-primary shrink-0">
+            Get started
+            <ArrowRight size={18} />
+          </Link>
+        </div>
+      </section>
+    </>
+  );
+}
+
+function ValueCard({
+  icon: Icon,
+  title,
+  body,
+}: {
+  icon: LucideIcon;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-surface p-6">
+      <Icon size={20} className="text-primary" aria-hidden />
+      <h3 className="mt-4 text-[17px] font-semibold leading-6">{title}</h3>
+      <p className="mt-2 text-[15px] leading-6 text-gray-600">{body}</p>
     </div>
   );
 }
 
-function Stat({
+function BigStat({
   value,
+  unit,
   label,
   note,
 }: {
   value: string;
+  unit?: string;
   label: string;
   note: string;
 }) {
   return (
-    <div className="bg-surface p-6">
-      <div className="font-mono text-xl font-semibold tabular-nums">{value}</div>
-      <div className="mt-1 text-sm font-medium text-gray-700">{label}</div>
-      <div className="mt-0.5 text-xs text-gray-500">{note}</div>
-    </div>
-  );
-}
-
-function Step({
-  icon: Icon,
-  n,
-  title,
-  body,
-}: {
-  icon: LucideIcon;
-  n: string;
-  title: string;
-  body: string;
-}) {
-  return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
-        <Icon size={15} className="text-gray-400" />
-        <span className="font-mono text-xs text-gray-400">{n}</span>
-        <h3 className="text-sm font-semibold">{title}</h3>
+      <div className="flex items-baseline gap-2">
+        <span className="font-mono text-[48px] font-semibold leading-none tracking-tight sm:text-[56px]">
+          {value}
+        </span>
+        {unit && (
+          <span className="text-lg font-medium text-gray-500">{unit}</span>
+        )}
       </div>
-      <p className="text-sm leading-5 text-gray-600">{body}</p>
+      <div className="mt-3 text-[15px] font-medium text-gray-700">{label}</div>
+      <div className="mt-1 text-sm text-gray-400">{note}</div>
     </div>
-  );
-}
-
-function PortalCard({
-  icon: Icon,
-  to,
-  title,
-  body,
-  cta,
-}: {
-  icon: LucideIcon;
-  to: string;
-  title: string;
-  body: string;
-  cta: string;
-}) {
-  return (
-    <Link
-      to={to}
-      className="group flex flex-col border border-gray-200 p-5 transition-colors hover:border-gray-300 hover:bg-gray-50"
-    >
-      <Icon size={16} className="mb-3 text-gray-500" />
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <p className="mt-1 flex-1 text-sm leading-5 text-gray-600">{body}</p>
-      <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-accent">
-        {cta}
-        <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </Link>
   );
 }

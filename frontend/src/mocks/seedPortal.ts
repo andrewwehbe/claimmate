@@ -359,7 +359,7 @@ function makeAppeal(a: AppealSeedArgs): AppealCase {
       `We request the denial be reversed and the claim reprocessed for payment of $${money(a.amount)}.`,
       ``,
       `Respectfully,`,
-      `Appeals Unit, Claimate (on behalf of ${pName})`,
+      `Appeals Unit, ClaimMate (on behalf of ${pName})`,
     ].join("\n"),
     citations,
     disputed_services: [a.service],

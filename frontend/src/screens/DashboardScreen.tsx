@@ -11,32 +11,20 @@ import {
 import { useDashboard } from "../api/queries";
 import { TopBar } from "../components/TopBar";
 import { formatMoney, formatPercent } from "../lib/format";
-import { useTheme } from "../lib/theme";
 
 const CHART_BLUE = "#2563EB";
 
-/** Recharts needs concrete values, so axis/grid colors follow the theme. */
-const CHART_COLORS = {
-  light: {
-    grid: "#F4F4F5",
-    axisText: "#A1A1AA",
-    axisLine: "#E4E4E7",
-    cursor: "#D4D4D8",
-    dotStroke: "#FFFFFF",
-  },
-  dark: {
-    grid: "#1E1E22",
-    axisText: "#6E6E76",
-    axisLine: "#26262A",
-    cursor: "#3F3F46",
-    dotStroke: "#0A0A0A",
-  },
+/** Recharts needs concrete values; static light palette. */
+const chart = {
+  grid: "#F4F4F5",
+  axisText: "#A1A1AA",
+  axisLine: "#E4E4E7",
+  cursor: "#D4D4D8",
+  dotStroke: "#FFFFFF",
 } as const;
 
 export function DashboardScreen() {
   const { data, isLoading, isError, error } = useDashboard();
-  const { theme } = useTheme();
-  const chart = CHART_COLORS[theme];
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

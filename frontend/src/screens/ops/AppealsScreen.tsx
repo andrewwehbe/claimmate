@@ -153,7 +153,7 @@ export function AppealsScreen() {
       render: (a) => (
         <button
           type="button"
-          className="text-xs font-medium text-accent hover:underline"
+          className="text-xs font-medium text-primary hover:underline"
           onClick={(e) => {
             e.stopPropagation();
             setSelectedId(a.appeal_id);
@@ -345,7 +345,7 @@ function AppealDetail({
             Created from upheld{" "}
             <button
               type="button"
-              className="font-mono text-accent hover:underline"
+              className="font-mono text-primary hover:underline"
               onClick={() => onSelectAppeal(appeal.predecessor_id!)}
             >
               {appeal.predecessor_id}
@@ -357,7 +357,7 @@ function AppealDetail({
             Escalated to{" "}
             <button
               type="button"
-              className="font-mono text-accent hover:underline"
+              className="font-mono text-primary hover:underline"
               onClick={() => onSelectAppeal(appeal.successor_id!)}
             >
               {appeal.successor_id}
@@ -367,7 +367,7 @@ function AppealDetail({
       </div>
 
       {appeal.status === "upheld" && (
-        <div className="flex items-center gap-2 border-l-2 border-severity-warning bg-amber-50/60 p-3 dark:bg-amber-500/10">
+        <div className="flex items-center gap-2 border-l-2 border-severity-warning bg-amber-50/60 p-3">
           {canEscalate ? (
             <>
               <span className="flex-1 text-sm text-gray-700">

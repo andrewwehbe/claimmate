@@ -90,12 +90,9 @@ export function PracticeReport() {
           <>
             <div className="flex items-baseline justify-between border-b-2 border-ink pb-3">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
-                    R
-                  </span>
+                <div className="flex items-center">
                   <span className="text-sm font-semibold tracking-tight">
-                    Claimate
+                    ClaimMate
                   </span>
                 </div>
                 <h1 className="mt-2 text-lg font-semibold tracking-tight">
@@ -134,7 +131,7 @@ export function PracticeReport() {
                 <Row label="Posted to your ledger">
                   {formatMoney(o.posted_to_ledger)}
                 </Row>
-                <Row label="Estimated Claimate fees (period)">
+                <Row label="Estimated ClaimMate fees (period)">
                   {formatMoney(estimateFees(o).fee)}
                 </Row>
               </tbody>
@@ -185,7 +182,7 @@ export function PracticeReport() {
             )}
 
             <p className="mt-10 border-t border-gray-200 pt-3 text-xs text-gray-400">
-              Claimate, Inc. (fictional, demo) · Generated{" "}
+              ClaimMate, Inc. (fictional, demo) · Generated{" "}
               {new Date().toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",

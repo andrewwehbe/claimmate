@@ -7,6 +7,8 @@ import { DenialsScreen } from "./screens/DenialsScreen";
 import { LandingScreen } from "./screens/LandingScreen";
 import { QueueScreen } from "./screens/QueueScreen";
 import { TrustScreen } from "./screens/TrustScreen";
+import { HowItWorksScreen } from "./screens/marketing/HowItWorksScreen";
+import { MarketingLayout } from "./screens/marketing/MarketingLayout";
 import { AppealsScreen } from "./screens/ops/AppealsScreen";
 import { AuditScreen } from "./screens/ops/AuditScreen";
 import { ClientsScreen } from "./screens/ops/ClientsScreen";
@@ -28,9 +30,12 @@ function LegacyClaimRedirect() {
 export default function App() {
   return (
     <Routes>
-      {/* Public */}
-      <Route path="/" element={<LandingScreen />} />
-      <Route path="/trust" element={<TrustScreen />} />
+      {/* Public marketing pages (shared header/footer) */}
+      <Route element={<MarketingLayout />}>
+        <Route path="/" element={<LandingScreen />} />
+        <Route path="/how-it-works" element={<HowItWorksScreen />} />
+        <Route path="/trust" element={<TrustScreen />} />
+      </Route>
       <Route path="/practice/signup" element={<SignupWizard />} />
       {/* Print-optimized report (identity-gated internally, no SideNav) */}
       <Route path="/practice/report" element={<PracticeReport />} />

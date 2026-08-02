@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
-  darkMode: "class",
   theme: {
     fontFamily: {
       sans: [
@@ -34,14 +33,18 @@ export default {
       sm: "4px",
       DEFAULT: "6px",
       md: "6px",
+      // 12/16px are for MARKETING pages only (landing, /how-it-works,
+      // /trust). Console screens stay at 6px max.
+      lg: "12px",
+      xl: "16px",
       full: "9999px", // reserved for dots only, never buttons
     },
     extend: {
       colors: {
-        // Themed tokens: RGB triplets defined in index.css (:root / .dark).
+        // Tokens: RGB triplets defined in index.css :root (light only).
         surface: "rgb(var(--surface) / <alpha-value>)",
         ink: "rgb(var(--ink) / <alpha-value>)",
-        // Label color on primary-blue accents (same in both themes).
+        // Label color on primary-blue accents.
         "on-accent": "#F5F5F5",
         gray: {
           50: "rgb(var(--gray-50) / <alpha-value>)",
@@ -59,9 +62,6 @@ export default {
           hover: "rgb(var(--primary-hover) / <alpha-value>)",
           subtle: "rgb(var(--primary-subtle) / <alpha-value>)",
         },
-        // Blue for TEXT (links). Lighter in dark so small text stays legible;
-        // fills/borders keep --primary (#2563EB) in both themes.
-        accent: "rgb(var(--accent) / <alpha-value>)",
         severity: {
           error: "rgb(var(--sev-error) / <alpha-value>)",
           warning: "rgb(var(--sev-warning) / <alpha-value>)",

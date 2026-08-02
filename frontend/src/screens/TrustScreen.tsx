@@ -1,48 +1,26 @@
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-
 import { SeverityDot } from "../components/SeverityDot";
-import { ThemeToggle } from "../components/ThemeToggle";
 
 /**
- * Public trust & security page. Honest tense throughout: what this demo
- * does today vs. what production adds.
+ * Trust & compliance page (rendered inside MarketingLayout). Honest tense
+ * throughout: what this demo does today vs. what production adds.
  */
 export function TrustScreen() {
   return (
-    <div className="min-h-screen bg-surface text-ink">
-      <header className="border-b border-gray-200">
-        <div className="mx-auto flex h-12 max-w-3xl items-center justify-between px-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="flex h-5 w-5 items-center justify-center rounded-sm bg-ink font-mono text-xs font-semibold text-surface">
-              R
-            </span>
-            <span className="text-sm font-semibold tracking-tight">Claimate</span>
-          </Link>
-          <span className="flex items-center gap-2">
-            <Link
-              to="/"
-              className="flex items-center gap-1 text-xs text-gray-500 transition-colors hover:text-ink"
-            >
-              <ArrowLeft size={13} /> Back to site
-            </Link>
-            <ThemeToggle />
-          </span>
-        </div>
-      </header>
+    <div className="mx-auto w-full max-w-[1360px] px-5 pb-20 pt-16 sm:pt-24 lg:px-10">
+      <h1 className="max-w-3xl text-[36px] font-semibold leading-[1.1] tracking-tight sm:text-[48px]">
+        Trust & compliance
+      </h1>
+      <p className="mt-5 max-w-2xl text-[17px] leading-7 text-gray-600 sm:text-[19px] sm:leading-8">
+        Plain language about how ClaimMate handles protected health
+        information and how we keep ourselves accountable. Where this page
+        describes the demo, it says so; where it describes production
+        commitments, it says that too.
+      </p>
 
-      <main className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-xl font-semibold tracking-tight">Trust & security</h1>
-        <p className="mt-2 max-w-xl text-sm leading-5 text-gray-600">
-          Plain language about how Claimate handles protected health
-          information and how we keep ourselves accountable. Where this page
-          describes the demo, it says so; where it describes production
-          commitments, it says that too.
-        </p>
-
+      <div className="mt-14 grid gap-x-16 gap-y-12 lg:grid-cols-2">
         <Section title="HIPAA posture">
           <p>
-            In production, Claimate operates as a business associate to its
+            In production, ClaimMate operates as a business associate to its
             client practices. We sign a Business Associate Agreement (BAA) with
             every client before any PHI moves, and we hold BAAs with every
             subprocessor in the data path (hosting, clearinghouse, and EDI
@@ -97,23 +75,17 @@ export function TrustScreen() {
             is a roadmap statement, not a current certification.
           </p>
         </Section>
+      </div>
 
-        <div className="mt-10 flex items-start gap-2 border-l-2 border-severity-info bg-gray-50 p-4 text-xs leading-5 text-gray-600">
-          <SeverityDot severity="INFO" showLabel={false} className="mt-1.5" />
-          <span>
-            This entire site is a demonstration environment. All data is
-            synthetic, all identities are seeded, and the payer portal is a
-            simulator that plays the payer's role. Nothing on this page is
-            legal advice or a certification claim.
-          </span>
-        </div>
-      </main>
-
-      <footer className="border-t border-gray-200">
-        <div className="mx-auto max-w-3xl px-6 py-6 text-xs text-gray-400">
-          Claimate, Inc. — a fictional company for this demo.
-        </div>
-      </footer>
+      <div className="mt-16 flex max-w-3xl items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 p-5 text-sm leading-6 text-gray-600">
+        <SeverityDot severity="INFO" showLabel={false} className="mt-1.5" />
+        <span>
+          This entire site is a demonstration environment. All data is
+          synthetic, all identities are seeded, and the payer portal is a
+          simulator that plays the payer's role. Nothing on this page is legal
+          advice or a certification claim.
+        </span>
+      </div>
     </div>
   );
 }
@@ -126,9 +98,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-8 border-t border-gray-100 pt-6">
-      <h2 className="text-md font-semibold tracking-tight">{title}</h2>
-      <div className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
+    <section>
+      <h2 className="text-[22px] font-semibold tracking-tight">{title}</h2>
+      <div className="mt-3 max-w-xl text-[15px] leading-7 text-gray-600">
         {children}
       </div>
     </section>

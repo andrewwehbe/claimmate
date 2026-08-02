@@ -128,7 +128,7 @@ function PortalEntry({
           to="/"
           className="mb-4 inline-flex items-center gap-1.5 text-xs text-gray-500 transition-colors hover:text-ink"
         >
-          <ArrowLeft size={13} /> Back to claimate.example
+          <ArrowLeft size={13} /> Back to ClaimMate site
         </Link>
         <div className="border border-gray-200 bg-surface p-6">
           <div className="mb-1 flex items-center gap-2">
@@ -137,7 +137,7 @@ function PortalEntry({
             {portal === "payer" && <InfoTip text={PAYER_SIMULATOR_NOTE} />}
           </div>
           <p className="mb-4 text-sm text-gray-500">{meta.tagline}</p>
-          <div className="mb-3 border-l-2 border-severity-warning bg-amber-50/60 px-3 py-2 text-xs text-gray-600 dark:bg-amber-500/10">
+          <div className="mb-3 border-l-2 border-severity-warning bg-amber-50/60 px-3 py-2 text-xs text-gray-600">
             Demo access — no real authentication. Choose a seeded identity to
             continue; your choice is stored locally in this browser only.
           </div>
@@ -147,7 +147,7 @@ function PortalEntry({
               New practice?{" "}
               <Link
                 to="/practice/signup"
-                className="font-medium text-accent hover:underline"
+                className="font-medium text-primary hover:underline"
               >
                 Start onboarding
               </Link>

@@ -3,13 +3,12 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/* Design tokens.                                                      */
+/* Design tokens (light only — clinical white surfaces by design).     */
 /* Spacing: 4/8/12/16/24/32/48. Radii: 4px inputs, 6px buttons/cards,  */
-/* 0 tables. Type: Inter UI at 13px body, JetBrains Mono for codes.    */
-/*                                                                     */
-/* Theming: all surface/text/border colors are RGB triplets consumed   */
-/* through the Tailwind config (rgb(var(--x) / <alpha>)). Light theme  */
-/* in :root, dark theme (the default) under .dark on <html>.           */
+/* 0 tables in the console; 12-16px allowed on marketing pages only.   */
+/* Type: Inter UI at 13px body in the console, JetBrains Mono for      */
+/* codes/IDs/amounts. All colors route through these RGB triplets via  */
+/* the Tailwind config (rgb(var(--x) / <alpha>)).                      */
 /* ------------------------------------------------------------------ */
 :root {
   --surface: 255 255 255;
@@ -28,7 +27,6 @@
   --primary: 37 99 235; /* #2563EB */
   --primary-hover: 29 78 216; /* #1D4ED8 */
   --primary-subtle: 239 246 255; /* #EFF6FF */
-  --accent: 37 99 235; /* link text: #2563EB on light */
 
   --sev-error: 220 38 38; /* #DC2626 */
   --sev-warning: 217 119 6; /* #D97706 */
@@ -36,68 +34,6 @@
   --sev-pass: 22 163 74; /* #16A34A */
 
   --selection: rgba(37, 99, 235, 0.18);
-
-  --radius-input: 4px;
-  --radius-control: 6px;
-  --row-h: 44px;
-  --row-h-compact: 36px;
-  --control-h: 36px;
-}
-
-/* Dark theme: inverted 9-step gray discipline. Near-black surfaces,   */
-/* near-white (never pure white) text, subtle borders, same hues for   */
-/* primary/severity with lightness adjusted for contrast.              */
-.dark {
-  --surface: 10 10 10; /* #0A0A0A */
-  --ink: 240 240 242; /* #F0F0F2 */
-
-  --gray-50: 17 17 19; /* #111113 raised surface */
-  --gray-100: 22 22 24; /* #161618 elevated */
-  --gray-200: 38 38 42; /* #26262A borders */
-  --gray-300: 53 53 58; /* #35353A */
-  --gray-400: 110 110 118; /* #6E6E76 */
-  --gray-500: 139 139 147; /* #8B8B93 */
-  --gray-600: 165 165 173; /* #A5A5AD */
-  --gray-700: 194 194 200; /* #C2C2C8 */
-  --gray-900: 232 232 236; /* #E8E8EC */
-
-  --primary: 37 99 235; /* blue stays #2563EB */
-  --primary-hover: 59 130 246; /* lighter hover on dark */
-  --primary-subtle: 23 37 84; /* #172554 */
-  --accent: 96 165 250; /* link text: #60A5FA for contrast on near-black */
-
-  --sev-error: 239 68 68; /* #EF4444 */
-  --sev-warning: 245 158 11; /* #F59E0B */
-  --sev-info: 156 163 175; /* #9CA3AF */
-  --sev-pass: 34 197 94; /* #22C55E */
-
-  --selection: rgba(59, 130, 246, 0.35);
-}
-
-/* The report (and anything else) ALWAYS prints light. */
-@media print {
-  html,
-  html.dark {
-    --surface: 255 255 255;
-    --ink: 10 10 10;
-    --gray-50: 250 250 250;
-    --gray-100: 244 244 245;
-    --gray-200: 228 228 231;
-    --gray-300: 212 212 216;
-    --gray-400: 161 161 170;
-    --gray-500: 113 113 122;
-    --gray-600: 82 82 91;
-    --gray-700: 63 63 70;
-    --gray-900: 24 24 27;
-    --primary: 37 99 235;
-    --primary-hover: 29 78 216;
-    --primary-subtle: 239 246 255;
-    --accent: 37 99 235;
-    --sev-error: 220 38 38;
-    --sev-warning: 217 119 6;
-    --sev-info: 107 114 128;
-    --sev-pass: 22 163 74;
-  }
 }
 
 html {
@@ -147,9 +83,21 @@ body {
     @apply btn border-gray-300 bg-surface text-gray-900 hover:bg-gray-50;
   }
   .btn-danger {
-    @apply btn border-gray-300 bg-surface text-severity-error hover:border-severity-error/40 hover:bg-red-50 dark:hover:bg-red-500/10;
+    @apply btn border-gray-300 bg-surface text-severity-error hover:border-severity-error/40 hover:bg-red-50;
   }
   .input {
     @apply h-9 rounded-sm border border-gray-300 bg-surface px-2.5 text-sm text-ink placeholder:text-gray-400 focus:border-primary focus:outline-none;
+  }
+
+  /* Marketing-surface buttons (landing, /how-it-works, /trust only).
+     Larger radii are permitted there; the console keeps 6px. */
+  .btn-marketing {
+    @apply inline-flex h-12 select-none items-center justify-center gap-2 rounded-lg px-6 text-base font-medium transition-colors duration-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+  .btn-marketing-primary {
+    @apply btn-marketing bg-primary text-on-accent hover:bg-primary-hover;
+  }
+  .btn-marketing-secondary {
+    @apply btn-marketing border border-gray-300 bg-surface text-ink hover:bg-gray-50;
   }
 }

@@ -158,7 +158,7 @@ export function PracticeIntegration() {
                 <FlowArrow label="charts / claims" />
                 <FlowNode
                   icon={Server}
-                  title="Claimate connector"
+                  title="ClaimMate connector"
                   note={METHOD_LABELS[account.integration_method]}
                 />
                 <FlowArrow label="normalized encounters" />

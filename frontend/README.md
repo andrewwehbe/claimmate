@@ -1,12 +1,12 @@
-# Claimate frontend (rcm-engine)
+# ClaimMate frontend (rcm-engine)
 
 Multi-portal SPA for the RCM engine: Vite + React 18 + TypeScript (strict) +
 Tailwind + TanStack Query + MSW. Runs fully standalone against an in-memory
 mock API — **no backend, no real auth, all data synthetic**.
 
-Dark mode is the default; a sun/moon toggle in the TopBar (and on the public
-landing and /trust pages) switches themes, persisted under the
-`claimate-theme` localStorage key. The printable report always prints light.
+Light theme only, by design (clinical white surfaces). All colors route
+through CSS-variable tokens in `src/index.css`, consumed via the Tailwind
+config as `rgb(var(--x) / <alpha>)`.
 
 ## Commands
 
@@ -17,12 +17,23 @@ npm run dev       # http://localhost:5173
 npm run build     # type-check (tsc) + production build
 ```
 
-## Portal map
+## Page map
+
+### Marketing (public, wide iOS-style layout, shared MarketingLayout header/footer)
 
 | Route | What it is |
 |---|---|
-| `/` | Public landing + access point selector (stats read live from the mock store, labeled "Simulated demo data") |
-| `/trust` | Public trust & security page: HIPAA posture, PHI handling, audit logging, HITL thresholds, SOC 2 roadmap |
+| `/` | Practice-first homepage: hero, claim-flow diagram, proof stats, CTAs ("Get started" -> signup, "Practice sign in" -> /practice). No portal selector — ops/payer entry lives in a small footer line ("For ClaimMate staff & demo"). |
+| `/how-it-works` | The connect -> code/scrub -> fight-denials story with step visuals and live efficiency stats |
+| `/trust` | Trust & compliance: HIPAA posture, PHI handling, audit logging, HITL thresholds, SOC 2 roadmap (also discloses demo status) |
+
+Marketing pages may use 12-16px radii and large display type; the console
+keeps the dense 6px design language.
+
+### Console portals
+
+| Route | What it is |
+|---|---|
 | `/practice/signup` | Practice onboarding wizard (5 steps, Luhn NPI validation, vendor API / FHIR / SFTP methods, payer EDI enrollment note) |
 | `/practice` | Practice portal: dashboard (volume, denial rate, recovered $, posted-to-ledger $, sync status) + "Download monthly report" |
 | `/practice/report` | Print-optimized monthly report (window.print) with estimated plan fees, from live store data |
@@ -34,7 +45,7 @@ npm run build     # type-check (tsc) + production build
 | `/ops/appeals` | Appeals workbench: levels (Recon/L1/L2/External), level+payer deadline rules, submission channels, SLA timers, KPI strip, escalate-on-uphold, audit trail |
 | `/ops/remittances` | Payment posting: parsed 835 rows with CPT lines + CARC adjustment chips; Post is one-way and audit-logged |
 | `/ops/clients` | Client practice management (includes wizard signups) with detail side panel |
-| `/ops/audit` | Append-only audit log: filter by actor, action, entity, date range; populated by seeded history + live session actions |
+| `/ops/audit` | Append-only audit log: filter by actor, action, entity, date range |
 | `/ops/dashboard` | Metrics: stat cards + clean-claim-rate line chart |
 | `/payer` | **Payer Simulator** appeals inbox — Overturn / Uphold / Request records (reflects into `/ops/appeals`; overturns generate unposted remittances) |
 | `/payer/remittances` | 835s issued by the signed-in simulated payer |
@@ -44,9 +55,9 @@ their `/ops/...` equivalents.
 
 ## Demo behaviors worth knowing
 
-- **Payer Simulator** (renamed from "Payer Portal"): in production, appeals are
-  submitted to payer-owned portals (e.g. Availity), fax, or mail; the
-  simulator plays the payer's role. An info tip repeats this in the UI.
+- **Payer Simulator**: in production, appeals are submitted to payer-owned
+  portals (e.g. Availity), fax, or mail; the simulator plays the payer's
+  role. An info tip repeats this in the UI.
 - **Escalation ladder**: reconsideration -> level_1 -> level_2 ->
   external_review (terminal). Upholding an appeal in the simulator enables
   "Escalate to next level" in `/ops/appeals`; the successor starts in
@@ -55,7 +66,7 @@ their `/ops/...` equivalents.
 - **Deadline rules**: days-from-denial per level — defaults
   {reconsideration: 90, level_1: 60, level_2: 60, external_review: 120}, with
   per-payer overrides (Aetna reconsideration: 180). See
-  `src/lib/appealRules.ts` (mirror of the engine's rule table).
+  `src/lib/appealRules.ts`.
 - **Claim lifecycle**: generated -> submitted_to_clearinghouse ->
   clearinghouse_accepted | clearinghouse_rejected -> payer_received -> paid |
   denied. Rendered as a stepper on claim detail; approving a generated or
@@ -72,7 +83,8 @@ their `/ops/...` equivalents.
 ## Demo identities (mock role gate)
 
 Each portal shows a "Demo access" entry screen; the choice persists in
-`localStorage` (`claimate-demo-identity:<portal>`). Sign out from the TopBar.
+`localStorage` (`claimate-demo-identity:<portal>` — internal key spelling is
+intentional). Sign out from the TopBar.
 
 - **Practice portal** — any onboarded practice, e.g. *Sunrise Family
   Medicine, S.C.* (connected), *Cedar Ridge Pediatrics* (degraded sync),
@@ -86,12 +98,9 @@ Each portal shows a "Demo access" entry screen; the choice persists in
 ## Where things live
 
 - `src/types/` — TS mirrors of the backend Pydantic models
-  (`src/rcm/models/*.py`); portal/API view models in `api.ts` + `portal.ts`
-  (kept clearly separate from model mirrors).
-- `src/mocks/` — MSW handlers + synthetic seed data (`seed.ts` for
-  claims/denials/eligibility, `seedPortal.ts` for
-  practices/appeals/syncs/remittances/audit history). One in-memory store is
-  shared by all portals.
+  (`src/rcm/models/*.py`); portal/API view models in `api.ts` + `portal.ts`.
+- `src/mocks/` — MSW handlers + synthetic seed data (`seed.ts`,
+  `seedPortal.ts`). One in-memory store shared by all portals.
 - `src/lib/carcRarc.ts` — mirror of `data/rules/carc_rarc.json` (keep in sync).
 - `src/lib/appealRules.ts` — appeal levels, deadline rules, submission channels.
 - `src/lib/npi.ts` — Luhn NPI check (port of `rcm/models/validators.py`).
@@ -100,21 +109,16 @@ Each portal shows a "Demo access" entry screen; the choice persists in
 - `src/components/` — shared console components (DataTable, StatusBadge,
   SeverityDot, ConfidenceBar, CodeChip, SidePanel, TopBar, SideNav,
   ClaimStepper, AuditTrail, InfoTip, ...).
-- `src/screens/` — screens grouped by portal (`practice/`, `ops/`, `payer/`).
+- `src/screens/` — console screens by portal (`practice/`, `ops/`, `payer/`);
+  marketing surface in `screens/marketing/` (MarketingLayout,
+  HowItWorksScreen, ClaimFlowDiagram) plus `LandingScreen` and `TrustScreen`.
 
 ## Design tokens
 
-Inter for UI (13px body), JetBrains Mono for all codes/IDs/amounts; radii
-4px inputs / 6px buttons+cards / 0 tables; single blue primary `#2563EB`;
-severity ERROR/WARNING/INFO/PASS as dots/left-borders only, never full
-colored backgrounds. No gradients, no emoji, no pill buttons, no shadows
-heavier than `shadow-sm`, no shimmer skeletons.
-
-Theming: every surface/text/border color routes through CSS variables (RGB
-triplets in `src/index.css`, consumed via the Tailwind config as
-`rgb(var(--x) / <alpha>)`). Light values live in `:root`, dark values under
-`.dark` on `<html>` (applied pre-paint by an inline script in `index.html`).
-Dark surfaces are near-black (`#0A0A0A` base, `#111113`/`#161618` raised),
-text is near-white (`#F0F0F2`, never pure white), borders in the `#26262A`
-range; severity hues brighten slightly for contrast; primary hover lightens
-to `#3B82F6`. `@media print` forces the light values regardless of theme.
+Inter for UI (13px body in the console), JetBrains Mono for all
+codes/IDs/amounts; radii 4px inputs / 6px buttons+cards / 0 tables in the
+console (12-16px allowed on marketing pages only); single blue primary
+`#2563EB`; severity ERROR/WARNING/INFO/PASS as dots/left-borders only, never
+full colored backgrounds. No gradients, no emoji, no stock images, no shadows
+heavier than `shadow-sm`, no shimmer skeletons; pill buttons remain banned in
+the console.

@@ -200,3 +200,27 @@ Autonomous decisions made during the build, with rationale. Ordered by phase.
     Same token discipline in both themes (near-black surfaces, no pure
     white text, single blue primary, severity hues adjusted only for
     contrast); the printable monthly report always renders light.
+    *(Superseded by #45.)*
+
+## Marketing redesign (2026-08-02, fourth iteration - founder direction)
+
+44. **Brand spelling is "ClaimMate"** (capital M). Internal storage keys
+    and demo domains keep the lowercase `claimate-*` form (keys are not
+    brand typography). The wordmark is plain type - the leftover monogram
+    chip next to the name was removed.
+45. **Light mode only; dark mode removed** (reverses #43, founder
+    decision): the product should reflect clinical cleanliness and
+    trustworthiness - white coats, white surfaces. The CSS-variable token
+    system stays (light values only) so retheming later is cheap.
+46. **The homepage sells to practices only.** The three-portal selector is
+    gone; Operations and the Payer Simulator moved to a discreet footer
+    line - they are demo/staff surfaces, not customer acquisition paths.
+    The "Simulated demo data" caption was removed from homepage stats at
+    the founder's direction; the /trust page still discloses demo status.
+47. **Marketing is multi-page, wide, and iOS-inspired** - /, /how-it-works,
+    and /trust share a MarketingLayout (sticky header nav, mobile menu)
+    with 48-68px display type, layouts that fill 16:9 desktops
+    (~1280-1440px containers), large drawn SVG graphics in the product
+    palette, and 12-16px radii ON MARKETING PAGES ONLY. The console keeps
+    the dense 6px design language; still no gradients, emoji, or stock
+    imagery anywhere.

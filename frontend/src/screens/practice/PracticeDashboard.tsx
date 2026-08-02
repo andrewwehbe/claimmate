@@ -98,7 +98,7 @@ export function PracticeDashboard() {
                   appear here after the first sync.{" "}
                   <Link
                     to="/practice/integration"
-                    className="font-medium text-accent hover:underline"
+                    className="font-medium text-primary hover:underline"
                   >
                     View integration status
                   </Link>
@@ -169,7 +169,7 @@ export function PracticeDashboard() {
                   description={
                     pending
                       ? "Recoveries will appear once your integration is live and denials are being worked."
-                      : "When Claimate overturns a denial for your practice, it appears here with the recovered amount."
+                      : "When ClaimMate overturns a denial for your practice, it appears here with the recovered amount."
                   }
                 />
               }

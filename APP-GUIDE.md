@@ -1,11 +1,11 @@
-# Claimate - Full Application Guide
+# ClaimMate - Full Application Guide
 
 Live demo: https://rcm-engine-lovat.vercel.app
 Repo: `C:\Users\HP\rcm-engine`
 
 ## What this app is
 
-Claimate (fictional brand) is the working prototype of an RCM (Revenue Cycle
+ClaimMate (fictional brand) is the working prototype of an RCM (Revenue Cycle
 Management) automation startup for small-to-medium private medical practices
 in the US. The pitch: practices connect their EHR or practice-management
 system to our platform, our engine verifies eligibility, reads their
@@ -25,11 +25,11 @@ The product has two halves in this repo:
    151 tests, runs fully offline.
 2. **The web app** (`frontend/`, React) - the deployed multi-portal
    interface: a practice portal, our internal operations console, and a
-   payer simulator, plus a public landing and trust page. It runs against an
-   in-browser mock API (MSW) seeded with synthetic data, so the deployed
-   site works with no server. All portals share one in-memory store, so
-   actions in one portal visibly flow into the others. Dark mode is the
-   default theme, with a light/dark toggle.
+   payer simulator, plus a multi-page marketing site (home, how-it-works,
+   trust). It runs against an in-browser mock API (MSW) seeded with
+   synthetic data, so the deployed site works with no server. All portals
+   share one in-memory store, so actions in one portal visibly flow into
+   the others. Light theme only, by design: clinical white cleanliness.
 
 Nothing in the demo is real: no real auth, no real patients (all data is
 synthetic), no real payer or clearinghouse connections.
@@ -38,14 +38,25 @@ synthetic), no real payer or clearinghouse connections.
 
 ## Page-by-page
 
-### `/` - Public landing page
+### `/` - Homepage
 
-Positioning copy for the niche, three portal entry cards, a "Get started"
-CTA into practice signup, a footer link to `/trust`, and live efficiency
-stats (appeal turnaround vs the 14-day manual baseline, overturn rate,
-clean-claim rate) read from the same mock store the portals use - labeled
-**"Simulated demo data"** so demo numbers are never mistaken for real
-performance.
+Speaks only to medical practices: a large hero (48-68px display type),
+"Get started" into the signup wizard, "Practice sign in", a wide drawn
+claim-flow diagram (EHR into the ClaimMate engine, out to the payer, with
+the auto-appeal loop on denials), three value cards, and big live
+efficiency numerals read from the same store the portals use. Wide,
+iOS-inspired layout that fills a 16:9 desktop and collapses cleanly to
+mobile with a hamburger nav. Operations and the Payer Simulator are no
+longer advertised here - they live on one discreet footer line for staff
+and demo use.
+
+### `/how-it-works` - How it works
+
+Its own page (marketing content links out to pages instead of stacking on
+one scroll): the three-step story - connect your EHR, we code and scrub
+every claim, we fight every denial - each step a wide section with a drawn
+visual (connection picker, coded-claim scrub, appeal timeline), plus the
+efficiency stats against the 14-day manual baseline and a closing CTA.
 
 ### `/trust` - Trust & compliance
 
@@ -195,11 +206,10 @@ decisions this session.
 
 ## Theming
 
-Dark mode is the default; a sun/moon toggle in the TopBar (and on public
-pages) switches themes and persists the choice. Same design tokens in both
-themes: near-black surfaces with near-white text in dark, the single blue
-primary, and severity colors tuned to stay legible on both backgrounds.
-The monthly report always prints light.
+Light mode only - white surfaces, near-black text, a single blue primary,
+severity colors as dots and borders. The marketing pages use larger type
+and 12-16px radii; the console keeps its dense 13px/6px design language.
+No gradients, no emoji, no stock imagery anywhere.
 
 ## How the portals connect
 
