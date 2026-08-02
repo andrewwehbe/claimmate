@@ -81,6 +81,7 @@ class AppealGenerator:
         )
         return AppealLetter(
             claim_id=context.claim_id,
+            level=context.level,
             subject=draft.subject,
             body=body,
             citations=context.citations,

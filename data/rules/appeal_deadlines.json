@@ -1,0 +1,18 @@
+{
+  "_comment": "Appeal filing windows in days from the denial (or prior-level decision) date, per level, with per-payer overrides keyed by payer EDI ID. Production: load each payer's contractual/regulatory appeal windows; Medicare has statutory windows (redetermination 120d, reconsideration 180d).",
+  "default": {
+    "reconsideration": 90,
+    "level_1": 60,
+    "level_2": 60,
+    "external_review": 120
+  },
+  "payers": {
+    "60054": {
+      "reconsideration": 180
+    },
+    "87726": {
+      "reconsideration": 120,
+      "level_1": 90
+    }
+  }
+}

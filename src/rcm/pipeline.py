@@ -20,15 +20,17 @@ from rcm.config import Settings
 from rcm.denials.appeals import AppealGenerator
 from rcm.denials.era_parser import parse_835
 from rcm.denials.taxonomy import DenialClassifier
+from rcm.eligibility.provider import EligibilityProvider, JsonEligibilityProvider
 from rcm.extraction.soap import SOAPExtractor
 from rcm.hitl.router import HITLRouter
 from rcm.llm.base import LLMClient
 from rcm.logging_config import configure_logging, get_logger
 from rcm.models.appeal import AppealLetter, DisputedService
 from rcm.models.edi import EDI837P, BillingProvider, InterchangeConfig
+from rcm.models.eligibility import EligibilityRequest, EligibilityResult
 from rcm.models.encounter import ClinicalEncounter
 from rcm.models.era import ERA835, DenialAnalysis
-from rcm.models.hitl import HITLQueueItem, RoutingDecision, ScrubFinding
+from rcm.models.hitl import HITLQueueItem, RoutingDecision, ScrubFinding, Severity
 from rcm.models.patient import PatientDemographics
 from rcm.rules.ncci import JsonNCCIRuleProvider
 
@@ -36,6 +38,7 @@ from rcm.rules.ncci import JsonNCCIRuleProvider
 class ClaimPipelineResult(BaseModel):
     claim_id: str
     encounter: ClinicalEncounter
+    eligibility: EligibilityResult | None = None
     coding: CodingResult
     findings: list[ScrubFinding] = Field(default_factory=list)
     edi_837p: str | None = None
@@ -61,6 +64,7 @@ class ClaimsPipeline:
         llm: LLMClient,
         settings: Settings,
         billing_provider: BillingProvider,
+        eligibility: EligibilityProvider | None = None,
     ) -> None:
         configure_logging()
         self._log = get_logger("rcm.claims_pipeline")
@@ -72,6 +76,7 @@ class ClaimsPipeline:
         self._scrubber = ClaimScrubber.from_rules_dir(
             ncci, settings.rules_dir, settings.timely_filing_days
         )
+        self._eligibility = eligibility or JsonEligibilityProvider(settings.rules_dir)
         self._builder = EDI837Builder()
         self.hitl = HITLRouter(settings)
 
@@ -93,6 +98,36 @@ class ClaimsPipeline:
             warnings=encounter.extraction_warnings,
         )
 
+        # Eligibility runs before coding/scrubbing: a claim for inactive
+        # coverage is a guaranteed denial regardless of how well it is coded.
+        eligibility = self._eligibility.check(
+            EligibilityRequest(
+                member_id=patient.member_id,
+                payer_id=patient.payer_id,
+                provider_npi=encounter.provider_npi,
+                service_date=encounter.service_date,
+            )
+        )
+        eligibility_findings: list[ScrubFinding] = []
+        if not eligibility.is_active:
+            detail = f" ({eligibility.notes})" if eligibility.notes else ""
+            eligibility_findings.append(
+                ScrubFinding(
+                    rule_id="ELIGIBILITY_INACTIVE",
+                    severity=Severity.ERROR,
+                    message=(
+                        f"Eligibility: coverage {eligibility.status.value} on date of "
+                        f"service{detail}"
+                    ),
+                    field="member_id",
+                )
+            )
+        log.info(
+            "eligibility_checked",
+            status=eligibility.status.value,
+            plan=eligibility.plan_name,
+        )
+
         coding = self._coder.code(encounter, patient, claim_id)
         if coding.claim is None:
             log.error("coding_failed", reason=coding.failure_reason)
@@ -100,11 +135,13 @@ class ClaimsPipeline:
                 route_to_human=True,
                 reasons=[f"coding failed: {coding.failure_reason}"],
             )
-            item = self.hitl.enqueue(claim_id, 0.0, 0, [], routing)
+            item = self.hitl.enqueue(claim_id, 0.0, 0, eligibility_findings, routing)
             return ClaimPipelineResult(
                 claim_id=claim_id,
                 encounter=encounter,
+                eligibility=eligibility,
                 coding=coding,
+                findings=eligibility_findings,
                 routing=routing,
                 hitl_item=item,
             )
@@ -118,7 +155,7 @@ class ClaimsPipeline:
             rejected_codes=[r.code for r in coding.rejected_codes],
         )
 
-        findings = self._scrubber.scrub(
+        findings = eligibility_findings + self._scrubber.scrub(
             claim, self._billing_provider.npi, submission_date
         )
         log.info(
@@ -147,6 +184,7 @@ class ClaimsPipeline:
         return ClaimPipelineResult(
             claim_id=claim_id,
             encounter=encounter,
+            eligibility=eligibility,
             coding=coding,
             findings=findings,
             edi_837p=edi,

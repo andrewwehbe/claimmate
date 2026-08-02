@@ -118,6 +118,17 @@ def main() -> None:
         if enc.extraction_warnings:
             print(f"  Warnings     : {'; '.join(enc.extraction_warnings)}")
 
+        if result.eligibility:
+            elig = result.eligibility
+            sub("Eligibility (270/271)")
+            print(f"  Coverage     : {elig.status.value.upper()}"
+                  + (f"  plan: {elig.plan_name}" if elig.plan_name else ""))
+            if elig.copay is not None:
+                print(f"  Copay        : {elig.copay:.2f} USD   "
+                      f"Deductible remaining: {elig.deductible_remaining:.2f} USD")
+            if elig.notes:
+                print(f"  Notes        : {elig.notes}")
+
         sub("Coded claim")
         if result.coding.claim is None:
             print(f"  CODING FAILED: {result.coding.failure_reason}")

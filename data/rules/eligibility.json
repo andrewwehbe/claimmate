@@ -1,0 +1,10 @@
+{
+  "_comment": "Synthetic eligibility roster for the mock 270/271 provider. Keyed by member ID. Production: replace JsonEligibilityProvider with a clearinghouse-backed provider issuing real-time X12 270 inquiries (e.g. via Availity/Change Healthcare) and parsing 271 responses - same EligibilityProvider interface.",
+  "members": {
+    "W884512345": {"status": "active", "plan_name": "Aetna Choice POS II", "copay": "25.00", "deductible_remaining": "350.00", "termination_date": null},
+    "W771203944": {"status": "active", "plan_name": "Aetna Open Access HMO", "copay": "30.00", "deductible_remaining": "0.00", "termination_date": null},
+    "W55098811": {"status": "active", "plan_name": "Aetna PPO", "copay": "20.00", "deductible_remaining": "1200.00", "termination_date": null},
+    "W99000111": {"status": "active", "plan_name": "Aetna PPO", "copay": "20.00", "deductible_remaining": "0.00", "termination_date": "2026-05-31"},
+    "W88121299": {"status": "inactive", "plan_name": "Aetna HMO", "copay": "35.00", "deductible_remaining": "500.00", "termination_date": null}
+  }
+}

@@ -47,12 +47,19 @@ Module layout (`src/rcm/`):
 | `models/` | Pydantic v2 domain models + format validators (NPI Luhn, ICD-10, CPT, POS, DOB) | no |
 | `llm/` | Single `LLMClient` interface: `MockLLM` (offline) and `InstructorLLM` (real) | — |
 | `extraction/` | SOAP note -> `ClinicalEncounter` with per-field confidence | yes |
+| `eligibility/` | 270/271 verification: pluggable `EligibilityProvider`, DOS-effective coverage status | no |
 | `coding/` | Code suggestion (LLM) + deterministic NCCI PTP/MUE/exclusivity validation | suggest only |
 | `rules/` | Pluggable `NCCIRuleProvider` + JSON seed loaders | no |
 | `claims/` | 837P segment dataclasses + renderer; deterministic scrubber | no |
-| `denials/` | 835 parser, CARC/RARC taxonomy, appeal generation | draft only |
+| `clearinghouse/` | Claim lifecycle state machine; 999 + 277CA acknowledgment parsing | no |
+| `denials/` | 835 parser, CARC/RARC taxonomy, appeal generation, appeal-level deadline rules | draft only |
 | `hitl/` | Routing thresholds and review queue | no |
 | `pipeline.py` | Orchestrators + structlog logging with PHI redaction | — |
+
+Claims pipeline order: extraction -> **eligibility (270/271)** -> coding ->
+scrubbing -> 837P -> HITL routing. Inactive/terminated/not-found coverage on
+the date of service produces an ERROR finding (`ELIGIBILITY_INACTIVE`) that
+forces human review before submission.
 
 ### The determinism boundary
 
@@ -112,6 +119,8 @@ The repo ships representative seeds (20-30 real rules each) in `data/rules/`:
 | `scrub_rules.json` | Prior-auth CPT list, CPT -> covered ICD-10 prefixes | Payer portals; LCD/NCD coverage tables |
 | `citations.json` | Appeal citation authorities per denial category | Compliance-reviewed policy library |
 | `fee_schedule.json` | Practice charge master | Practice PM system / contracted fees |
+| `eligibility.json` | Mock member coverage roster for the 270/271 simulator | Real-time 270/271 via clearinghouse (Availity, Change Healthcare) |
+| `appeal_deadlines.json` | Appeal filing windows per level with per-payer overrides | Payer contracts / regulatory windows (e.g. Medicare statutory) |
 
 For NCCI specifically, implement a new `NCCIRuleProvider` subclass that
 ingests the CMS CSVs into the same in-memory shape and inject it where

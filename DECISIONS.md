@@ -145,3 +145,50 @@ Autonomous decisions made during the build, with rationale. Ordered by phase.
 33. **Company branded as fictional "RemitPath"** (labeled fictional);
     real insurer names appear only as payer labels; every number is
     synthetic.
+
+## RCM-realism upgrade (2026-08-02, third iteration)
+
+34. **Payer portal reframed as "Payer Simulator."** Real payers do not adopt
+    vendor portals; appeals go outbound into payer-owned channels (Availity,
+    fax, certified mail, 275 electronic attachments). The portal stays
+    because it demos the full loop, but it is labeled as playing the
+    payer's role, and every appeal now carries a `submission_channel` so
+    the outbound model is visible in the UI.
+35. **Eligibility runs before coding and scrubbing** in the claims pipeline.
+    A claim for inactive coverage is a guaranteed denial no matter how well
+    it is coded, so the check happens as early as the data allows (right
+    after extraction). Implemented as a pluggable `EligibilityProvider`;
+    the JSON-backed mock simulates the 271 answer while `generate_270`
+    renders the real inquiry we would transmit.
+36. **NOT_FOUND eligibility is treated like inactive coverage** (ERROR
+    finding, HITL route). A subscriber the payer cannot identify will
+    reject at the clearinghouse or deny; a human must fix the member ID
+    before submission. Termination is evaluated against the date of
+    service: an "active" plan terminated before the DOS comes back
+    TERMINATED.
+37. **Claim lifecycle is an explicit state machine**
+    (generated -> submitted_to_clearinghouse -> accepted/rejected ->
+    payer_received -> paid/denied, rejected -> resubmit, denied -> paid
+    after overturn). Illegal transitions raise instead of silently
+    corrupting state. 999 (AK9/IK5) and 277CA (TRN/STC categories A1-A8)
+    acknowledgment parsing is deterministic with unknown-category failures
+    loud, not guessed.
+38. **Appeals have levels with per-payer filing windows**
+    (reconsideration -> level 1 -> level 2 -> external review, terminal).
+    Windows load from `data/rules/appeal_deadlines.json` (defaults +
+    per-payer overrides); the deadline clock restarts at each level from
+    the prior decision date. An upheld appeal escalates by creating a
+    linked successor, preserving each level's own record.
+39. **Audit log is append-only by design** (frontend store today, DB table
+    in production): every state-changing action records timestamp, actor,
+    portal, action, entity, and a before/after summary. No edit or delete
+    path exists. This is the compliance differentiator and the basis for
+    the /trust page's claims.
+40. **"Direct database connection" removed from onboarding.** No PM/EHR
+    vendor grants third-party DB access; the realistic options are vendor
+    APIs, FHIR, or SFTP flat-file exports, and production onboarding also
+    requires per-payer EDI enrollment (2-6 weeks), now stated in the
+    wizard so sales expectations match operational reality.
+41. **Landing stats are labeled "Simulated demo data."** The demo's
+    credibility with technical buyers depends on never blurring simulated
+    and real performance.

@@ -56,6 +56,45 @@ class TestClaimsPipelineEndToEnd:
         assert any("confidence" in r for r in result.routing.reasons)
 
 
+class TestEligibilityInPipeline:
+    def test_active_coverage_recorded_and_clean(
+        self, claims_pipeline, patient_jane, interchange
+    ):
+        result = claims_pipeline.process_note(
+            read_synthetic("soap_clean.txt"), patient_jane, "CLM-1001",
+            interchange, SUBMISSION_DATE,
+        )
+        assert result.eligibility is not None
+        assert result.eligibility.is_active
+        assert not any(f.rule_id == "ELIGIBILITY_INACTIVE" for f in result.findings)
+
+    def test_terminated_coverage_routes_to_hitl(
+        self, claims_pipeline, patient_jane, interchange
+    ):
+        terminated_patient = patient_jane.model_copy(update={"member_id": "W99000111"})
+        result = claims_pipeline.process_note(
+            read_synthetic("soap_clean.txt"), terminated_patient, "CLM-2001",
+            interchange, SUBMISSION_DATE,
+        )
+        finding = next(f for f in result.findings if f.rule_id == "ELIGIBILITY_INACTIVE")
+        assert finding.severity.value == "ERROR"
+        assert "terminated" in finding.message
+        assert result.eligibility.status.value == "terminated"
+        assert result.routing.route_to_human
+        assert any("ELIGIBILITY_INACTIVE" in r for r in result.routing.reasons)
+
+    def test_unknown_member_routes_to_hitl(
+        self, claims_pipeline, patient_jane, interchange
+    ):
+        unknown_patient = patient_jane.model_copy(update={"member_id": "ZZ-UNKNOWN-1"})
+        result = claims_pipeline.process_note(
+            read_synthetic("soap_clean.txt"), unknown_patient, "CLM-2002",
+            interchange, SUBMISSION_DATE,
+        )
+        assert result.eligibility.status.value == "not_found"
+        assert result.routing.route_to_human
+
+
 class TestDenialsPipelineEndToEnd:
     def test_clean_era_produces_no_appeals(self, denials_pipeline):
         result = denials_pipeline.process_era(read_synthetic("era_clean_835.txt"))

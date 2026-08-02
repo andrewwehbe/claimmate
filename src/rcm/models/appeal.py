@@ -5,10 +5,26 @@ regulation citations."""
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
 from rcm.models.era import DenialCategory
+
+
+class AppealLevel(str, Enum):
+    """Escalation ladder for a denial. Each upheld decision may escalate to
+    the next level; external review is terminal."""
+
+    RECONSIDERATION = "reconsideration"
+    LEVEL_1 = "level_1"
+    LEVEL_2 = "level_2"
+    EXTERNAL_REVIEW = "external_review"
+
+    def next_level(self) -> "AppealLevel | None":
+        order = list(AppealLevel)
+        index = order.index(self)
+        return order[index + 1] if index + 1 < len(order) else None
 
 
 class Citation(BaseModel):
@@ -28,6 +44,7 @@ class AppealContext(BaseModel):
 
     claim_id: str
     payer_name: str
+    level: AppealLevel = AppealLevel.RECONSIDERATION
     denial_category: DenialCategory
     carc_code: str
     carc_description: str
@@ -44,6 +61,7 @@ class AppealContext(BaseModel):
 
 class AppealLetter(BaseModel):
     claim_id: str
+    level: AppealLevel = AppealLevel.RECONSIDERATION
     subject: str
     body: str = Field(min_length=1)
     citations: list[Citation]
