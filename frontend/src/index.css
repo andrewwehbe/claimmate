@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------ */
+/* Design tokens.                                                      */
+/* Spacing: 4/8/12/16/24/32/48. Radii: 4px inputs, 6px buttons/cards,  */
+/* 0 tables. Type: Inter UI at 13px body, JetBrains Mono for codes.    */
+/* ------------------------------------------------------------------ */
+:root {
+  --color-bg: #ffffff;
+  --color-bg-subtle: #fafafa;
+  --color-ink: #0a0a0a;
+
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-900: #18181b;
+
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+
+  --severity-error: #dc2626;
+  --severity-warning: #d97706;
+  --severity-info: #6b7280;
+  --severity-pass: #16a34a;
+
+  --radius-input: 4px;
+  --radius-control: 6px;
+
+  --row-h: 44px;
+  --row-h-compact: 36px;
+  --control-h: 36px;
+}
+
+html {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--color-ink);
+  background: var(--color-bg);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-size: 13px;
+  line-height: 20px;
+  margin: 0;
+}
+
+::selection {
+  background: #dbeafe;
+}
+
+/* Thin scrollbars for a dense console feel */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-300) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-9 select-none items-center gap-1.5 rounded border px-3 text-sm font-medium transition-colors duration-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply btn border-primary bg-primary text-white hover:bg-primary-hover;
+  }
+  .btn-secondary {
+    @apply btn border-gray-300 bg-white text-gray-900 hover:bg-gray-50;
+  }
+  .btn-danger {
+    @apply btn border-gray-300 bg-white text-severity-error hover:border-severity-error/40 hover:bg-red-50;
+  }
+  .input {
+    @apply h-9 rounded-sm border border-gray-300 bg-white px-2.5 text-sm text-ink placeholder:text-gray-400 focus:border-primary focus:outline-none;
+  }
+}
