@@ -9,12 +9,14 @@ deterministic billing logic.
 Everything runs offline by default (MockLLM); no API keys are required for
 tests or the demo.
 
+Live demo (3-portal frontend on synthetic data): https://rcm-engine-lovat.vercel.app
+
 ## Quickstart
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python -m pip install -e ".[dev]"
-.\.venv\Scripts\python -m pytest          # 110 tests, offline
+.\.venv\Scripts\python -m pytest          # 151 tests, offline
 .\.venv\Scripts\python scripts\demo.py    # both pipelines end-to-end
 ```
 
